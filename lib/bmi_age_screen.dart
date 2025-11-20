@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'bmi_weight_screen.dart';
 
 class BmiAgeScreen extends StatefulWidget {
-  final String userId;   
+  final String userId;  
   final String name;
   final String email;
   final String gender;
   final String password;
+  final String profile_image; // <-- 1. เพิ่มตัวแปรรับค่า
 
   const BmiAgeScreen({
     super.key,
@@ -15,6 +16,7 @@ class BmiAgeScreen extends StatefulWidget {
     required this.email,
     required this.gender,
     required this.password,
+    required this.profile_image, // <-- 2. เพิ่มใน constructor
   });
 
   @override
@@ -87,6 +89,7 @@ class _BmiAgeScreenState extends State<BmiAgeScreen> {
                       gender: widget.gender,
                       password: widget.password,
                       age: age,
+                      profile_image: widget.profile_image, // <-- 3. ส่งต่อ
                     ),
                   ),
                 );

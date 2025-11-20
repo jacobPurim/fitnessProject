@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'bmi_height_screen.dart';
+import 'bmi_height_screen.dart'; 
 
 class BmiWeightScreen extends StatefulWidget {
-  final String userId;
+  final String userId;  
   final String name;
   final String email;
   final String gender;
   final String password;
   final int age;
+  final String profile_image; // <-- 1. เพิ่มตัวแปรรับค่า
 
   const BmiWeightScreen({
     super.key,
@@ -17,6 +18,7 @@ class BmiWeightScreen extends StatefulWidget {
     required this.gender,
     required this.password,
     required this.age,
+    required this.profile_image, // <-- 2. เพิ่มใน constructor
   });
 
   @override
@@ -24,15 +26,15 @@ class BmiWeightScreen extends StatefulWidget {
 }
 
 class _BmiWeightScreenState extends State<BmiWeightScreen> {
-  int weight = 60;
+  int weight = 70; // (ตัวอย่าง)
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        leading: BackButton(color: Colors.white),
+       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        leading: BackButton(color: Colors.white),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -44,7 +46,7 @@ class _BmiWeightScreenState extends State<BmiWeightScreen> {
           ),
 
           Text(
-            "$weight Kg",
+            "$weight kg",
             style: const TextStyle(
               color: Colors.white,
               fontSize: 60,
@@ -53,50 +55,50 @@ class _BmiWeightScreenState extends State<BmiWeightScreen> {
           ),
 
           SizedBox(
-            height: 120,
+            height: 140,
             child: ListWheelScrollView.useDelegate(
               itemExtent: 40,
               physics: const FixedExtentScrollPhysics(),
+              controller: FixedExtentScrollController(initialItem: 30), // 40 + 30 = 70
               onSelectedItemChanged: (v) {
-                setState(() => weight = v + 30);
+                setState(() => weight = v + 40); // เริ่มที่ 40kg
               },
               childDelegate: ListWheelChildBuilderDelegate(
                 builder: (_, i) => Center(
                   child: Text(
-                    "${i + 30}",
+                    "${i + 40}", // เริ่มที่ 40kg
                     style: TextStyle(
-                      color: (i + 30 == weight)
-                          ? Colors.white
-                          : Colors.white30,
-                      fontSize: (i + 30 == weight) ? 28 : 20,
+                      color: (i + 40 == weight) ? Colors.white : Colors.white30,
+                      fontSize: (i + 40 == weight) ? 28 : 20,
                     ),
                   ),
                 ),
-                childCount: 150,
+                childCount: 160, // 40 - 200kg
               ),
             ),
           ),
 
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20.0),
             child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => BmiHeightScreen(
+                    builder: (_) => BmiHeightScreen( // <-- ไปหน้า Height
                       userId: widget.userId,
                       name: widget.name,
                       email: widget.email,
                       gender: widget.gender,
                       password: widget.password,
                       age: widget.age,
-                      weight: weight,
+                      weight: weight, // <-- ส่ง weight ที่เลือก
+                      profile_image: widget.profile_image, // <-- 3. ส่งต่อ
                     ),
                   ),
                 );
               },
-              style: ElevatedButton.styleFrom(
+               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -104,7 +106,7 @@ class _BmiWeightScreenState extends State<BmiWeightScreen> {
                 ),
               ),
               child: const Text("Continue",
-                  style: TextStyle(color: Colors.white)),
+                  style: TextStyle(color: Colors.white, fontSize: 18)),
             ),
           )
         ],

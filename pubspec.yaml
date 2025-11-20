@@ -1,35 +1,49 @@
 name: flutter11
 description: "A new Flutter project."
 publish_to: 'none'
-
 version: 1.0.0+1
 
+# 1. แก้ไข environment: sdk 
 environment:
-  sdk: ^3.9.2
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
+  # UI
   cupertino_icons: ^1.0.8
 
+  # Networking
   http: ^1.5.0
 
+  # Image
+  image_picker: ^1.0.5
+
+  # Video Players (สำหรับไฟล์ .mp4)
   video_player: ^2.9.1
   chewie: ^1.7.5
+  
+  # Video Players (สำหรับ YouTube)
+  # อัปเกรดเป็น v9 เพื่อให้รองรับ inappwebview v6
+  youtube_player_flutter: ^9.0.0 
+  
+  # เปิดลิงก์ (บราวเซอร์, YouTube App)
+  # อัปเกรดเป็นเวอร์ชันล่าสุด
+  url_launcher: ^6.3.1 
 
-  # ใช้เลือกรูปภาพ
-  image_picker: ^1.0.5
+  # แก้ Build Error (Namespace)
+  flutter_inappwebview: ^6.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^5.0.0
+  flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
-
+  
   assets:
     - assets/image1.png
     - assets/image2.png

@@ -12,6 +12,7 @@ class BmiResultScreen extends StatelessWidget {
   final int age;
   final int weight;
   final int height;
+  final String profile_image; // <-- 1. เพิ่มตัวแปรรับค่า
 
   const BmiResultScreen({
     super.key,
@@ -23,6 +24,7 @@ class BmiResultScreen extends StatelessWidget {
     required this.age,
     required this.weight,
     required this.height,
+    required this.profile_image, // <-- 2. เพิ่มใน constructor
   });
 
   double calculateBMI() {
@@ -97,6 +99,7 @@ class BmiResultScreen extends StatelessWidget {
                           "weight": weight,
                           "height": height,
                           "bmi": bmi,
+                          "profile_image": profile_image, // <-- 3. ส่ง profile_image ไป Home
                         },
                       ),
                     ),
@@ -129,6 +132,7 @@ class BmiResultScreen extends StatelessWidget {
                         weight: weight,
                         height: height,
                         bmi: bmi,
+                        profile_image: profile_image, // <-- 4. ส่ง profile_image ไป Profile
                       ),
                     ),
                   );

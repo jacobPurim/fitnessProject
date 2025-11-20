@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => ScheduleScreen(
-          userId: userId,      // ✅ ส่งเป็น int แน่นอน
+          userId: userId, 		// ✅ ส่งเป็น int แน่นอน
           existing: schedule,
         ),
       ),
@@ -206,6 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = widget.userData ?? {};
 
     final displayName = _safeString(user['name'], "User");
+    final profileImage = _safeString(user['profile_image']); // <-- 1. ดึงชื่อไฟล์รูปภาพ
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -241,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
 
-                  // ✅ PROFILE ICON
+                  // ✅ PROFILE ICON (Updated)
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -255,15 +256,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             weight: _safeInt(user['weight'], 70),
                             height: _safeInt(user['height'], 170),
                             bmi: _safeDouble(user['bmi'], 22.5),
+                            profile_image: profileImage, // <-- 2. ส่งชื่อไฟล์รูปไป
                           ),
                         ),
                       );
                     },
-                    child: CircleAvatar(
-                      radius: 26,
-                      backgroundColor: Colors.redAccent,
-                      child: const Icon(Icons.person, color: Colors.white),
-                    ),
+                    // 3. แสดงรูปภาพโปรไฟล์
+                    child: (profileImage.isNotEmpty)
+                        ? CircleAvatar(
+                            radius: 26,
+                            backgroundColor: Colors.grey[800],
+                            backgroundImage: NetworkImage(
+                              "http://10.0.2.2/flutter_api/uploads/profile/$profileImage",
+                            ),
+                          )
+                        : const CircleAvatar(
+                            radius: 26,
+                            backgroundColor: Colors.redAccent,
+                            child: Icon(Icons.person, color: Colors.white),
+                          ),
                   )
                 ],
               ),

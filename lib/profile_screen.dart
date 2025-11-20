@@ -9,6 +9,7 @@ class ProfileScreen extends StatelessWidget {
   final int weight;
   final int height;
   final double bmi;
+  final String profile_image; // <-- 1. เพิ่มตัวแปรรับค่า
 
   const ProfileScreen({
     super.key,
@@ -19,6 +20,7 @@ class ProfileScreen extends StatelessWidget {
     required this.weight,
     required this.height,
     required this.bmi,
+    required this.profile_image, // <-- 2. เพิ่มใน constructor
   });
 
   // ✅ ฟังก์ชันกัน null / ค่าว่าง ปลอดภัยแน่นอน
@@ -31,6 +33,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final safeName = _safeString(name, "User");
+    final safeImage = _safeString(profile_image, ""); // <-- 3. ดึงชื่อไฟล์รูป
 
     // ✅ กันการ crash จาก safeName[0]
     final avatarLetter =
@@ -55,15 +58,23 @@ class ProfileScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
 
-            // ✅ Avatar (กัน null + กัน string ว่าง)
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.redAccent,
-              child: Text(
-                avatarLetter,
-                style: const TextStyle(color: Colors.white, fontSize: 40),
-              ),
-            ),
+            // ✅ Avatar (Updated)
+            (safeImage.isNotEmpty)
+                ? CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey[800],
+                    backgroundImage: NetworkImage(
+                      "http://10.0.2.2/flutter_api/uploads/profile/$safeImage",
+                    ),
+                  )
+                : CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.redAccent,
+                    child: Text(
+                      avatarLetter,
+                      style: const TextStyle(color: Colors.white, fontSize: 40),
+                    ),
+                  ),
 
             const SizedBox(height: 10),
 

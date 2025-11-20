@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart'; 
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -20,45 +22,66 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   String? _selectedGender;
+  File? _pickedImage;
 
+  // -------------------------
+  // เลือกรูปโปรไฟล์
+  // -------------------------
+  Future<void> pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+
+    if (picked != null) {
+      setState(() => _pickedImage = File(picked.path));
+    }
+  }
+
+  // -------------------------
+  // REGISTER + UPLOAD IMAGE
+  // -------------------------
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    try {
-      final response = await http.post(
-        Uri.parse("http://10.0.2.2/flutter_api/register.php"),
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
-        body: {
-          "name": _nameController.text.trim(),
-          "email": _emailController.text.trim(),
-          "password": _passwordController.text.trim(),
-          "gender": _selectedGender ?? "",
-        },
-      );
+    var uri = Uri.parse("http://10.0.2.2/flutter_api/register.php");
+    var request = http.MultipartRequest("POST", uri);
 
-      var data = jsonDecode(response.body);
+    request.fields['name'] = _nameController.text.trim();
+    request.fields['email'] = _emailController.text.trim();
+    request.fields['password'] = _passwordController.text.trim();
+    request.fields['gender'] = _selectedGender ?? "";
 
-      if (data["success"] == true) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => BmiAgeScreen(
-              userId: data["user_id"].toString(),
-              name: _nameController.text.trim(),      // ✅ ส่งไปแล้ว
-              email: data["email"],
-              gender: _selectedGender!,               // ✅ ส่งไปแล้ว
-              password: data["password"],
-            ),
+    // ถ้ามีรูป → แนบไปกับ POST
+    if (_pickedImage != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'profile_image',
+        _pickedImage!.path,
+      ));
+    }
+
+    var response = await request.send();
+    var responseBody = await response.stream.bytesToString();
+
+    var data = jsonDecode(responseBody);
+
+    print("REGISTER RESPONSE = $data");
+
+    if (data["success"] == true) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BmiAgeScreen(
+            userId: data["user_id"].toString(),
+            name: data["name"],
+            email: data["email"],
+            gender: data["gender"],
+            password: data["password"],
+            profile_image: data["profile_image"] ?? "", // <-- แก้ไขตรงนี้
           ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["message"] ?? "Register failed")),
-        );
-      }
-    } catch (e) {
+        ),
+      );
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        SnackBar(content: Text(data["message"] ?? "Register failed")),
       );
     }
   }
@@ -77,20 +100,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-
                 const Text(
                   "Create Account",
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 32,
-                      fontWeight: FontWeight.bold
-                  ),
+                      fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 30),
 
-                // ✅ NAME
+                // -------------------------
+                // PROFILE IMAGE PICKER
+                // -------------------------
+                GestureDetector(
+                  onTap: pickImage,
+                  child: CircleAvatar(
+                    radius: 45,
+                    backgroundColor: Colors.white12,
+                    backgroundImage:
+                        _pickedImage != null ? FileImage(_pickedImage!) : null,
+                    child: _pickedImage == null
+                        ? const Icon(Icons.camera_alt,
+                            color: Colors.white70, size: 28)
+                        : null,
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                // -------------------------
+                // FULL NAME
+                // -------------------------
                 TextFormField(
                   controller: _nameController,
                   style: const TextStyle(color: Colors.white),
@@ -100,7 +142,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // ✅ EMAIL
+                // -------------------------
+                // EMAIL
+                // -------------------------
                 TextFormField(
                   controller: _emailController,
                   style: const TextStyle(color: Colors.white),
@@ -110,7 +154,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // ✅ PASSWORD
+                // -------------------------
+                // PASSWORD
+                // -------------------------
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
@@ -121,8 +167,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // ✅ GENDER SELECTOR
-                const Text("Gender", style: TextStyle(color: Colors.white70)),
+                // -------------------------
+                // GENDER SELECTOR
+                // -------------------------
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Gender",
+                      style: TextStyle(color: Colors.white70)),
+                ),
                 const SizedBox(height: 8),
 
                 Row(
@@ -135,7 +187,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 40),
 
-                // ✅ REGISTER BUTTON
+                // -------------------------
+                // REGISTER BUTTON
+                // -------------------------
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -155,19 +209,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 20),
 
-                // ✅ GO TO LOGIN
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    },
-                    child: const Text(
-                      "Already have an account? Login",
-                      style: TextStyle(color: Colors.orange),
-                    ),
+                // -------------------------
+                // LOGIN LINK
+                // -------------------------
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const LoginScreen()),
+                    );
+                  },
+                  child: const Text(
+                    "Already have an account? Login",
+                    style: TextStyle(color: Colors.orange),
                   ),
                 )
               ],
@@ -178,7 +233,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // ✅ GENDER BUTTON
+  // -------------------------
+  // Gender button widget
+  // -------------------------
   Widget _genderButton(String gender, IconData icon) {
     final bool selected = _selectedGender == gender;
 
@@ -207,7 +264,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // ✅ INPUT DECORATION
+  // -------------------------
+  // Input decoration
+  // -------------------------
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,

@@ -30,26 +30,30 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final response = await http.post(
         Uri.parse("http://10.0.2.2/flutter_api/login.php"),
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Accept": "application/json",
-        },
         body: {
           "email": _email.text.trim(),
           "password": _password.text.trim(),
         },
       );
 
-      print("SERVER RESPONSE: ${response.body}");
-
       var data = jsonDecode(response.body);
+      print("LOGIN RESPONSE: $data");
 
       if (data["success"] == true) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => HomeScreen(
-              userData: data["user"],
+              userData: {
+                "id": data["user_id"],
+                "name": data["name"],
+                "email": data["email"],
+                "gender": data["gender"],
+                "age": data["age"],
+                "height": data["height"],
+                "weight": data["weight"],
+                "profile_image": data["profile_image"],
+              },
             ),
           ),
         );
@@ -80,7 +84,6 @@ class _LoginScreenState extends State<LoginScreen> {
               "Welcome Back",
               style: TextStyle(color: Colors.white, fontSize: 32),
             ),
-
             const SizedBox(height: 30),
 
             TextField(
@@ -91,7 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 hintStyle: TextStyle(color: Colors.white38),
               ),
             ),
-
             const SizedBox(height: 20),
 
             TextField(
@@ -103,10 +105,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 hintStyle: TextStyle(color: Colors.white38),
               ),
             ),
-
             const SizedBox(height: 30),
 
-            // ✅ LOGIN BUTTON
             ElevatedButton(
               onPressed: loading ? null : login,
               style: ElevatedButton.styleFrom(
@@ -120,24 +120,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
             ),
-
             const SizedBox(height: 20),
 
-            // ✅ BACK TO REGISTER BUTTON
             TextButton(
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const RegisterScreen()),
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
                 );
               },
               child: const Text(
                 "Don't have an account? Register",
-                style: TextStyle(
-                  color: Colors.orange,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.orange, fontSize: 14),
               ),
             ),
           ],
