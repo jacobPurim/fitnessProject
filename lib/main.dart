@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
+import 'home_screen.dart'; // Import HomeScreen สำหรับปุ่มทดลองใช้งาน
 
 void main() {
   runApp(const MyApp());
@@ -34,6 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<String> images = [
     'assets/image1.png',
     'assets/image2.png',
+    'assets/image3.png',
   ];
 
   @override
@@ -108,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
 
-          /// ✅ Text + Button
+          /// ✅ Text + Buttons
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
             child: Column(
@@ -116,7 +118,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Make your\nbody healthier\nand stronger',
+                  'สร้างร่างกายให้แข็งแรง\nและสุขภาพดียิ่งขึ้น', // ภาษาไทย
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 32,
@@ -128,8 +130,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const SizedBox(height: 16),
 
                 const Text(
-                  'Sport is a form of physical activity that is usually '
-                  'competitive with the aim of increasing physical abilities.',
+                  'กีฬาคือรูปแบบหนึ่งของการออกกำลังกาย\nเพื่อเพิ่มสมรรถภาพทางกายและสุขภาพที่ดี', // ภาษาไทย
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
@@ -139,7 +140,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                 const SizedBox(height: 32),
 
-                /// ✅ ปุ่ม Get Started
+                /// ✅ ปุ่มเริ่มต้นใช้งาน (Get Started) -> ไป Register
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -159,11 +160,43 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     child: const Text(
-                      'Get Started',
+                      'เริ่มต้นใช้งาน', // ภาษาไทย
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                /// ✅ ปุ่มทดลองใช้งาน (Guest Mode) -> ไป Home
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HomeScreen(
+                            userData: {
+                              'name': 'Guest User',
+                              'id': '0', // ID สมมติสำหรับ Guest
+                              'profile_image': '',
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'ทดลองใช้งาน',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                        decoration: TextDecoration.underline, // ขีดเส้นใต้ให้รู้ว่าเป็นปุ่มรอง
+                        decorationColor: Colors.white70,
                       ),
                     ),
                   ),

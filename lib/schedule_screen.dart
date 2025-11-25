@@ -1,4 +1,3 @@
-// lib/schedule_screen.dart
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -19,19 +18,24 @@ class ScheduleScreen extends StatefulWidget {
 
 class _ScheduleScreenState extends State<ScheduleScreen>
     with SingleTickerProviderStateMixin {
+  
+  // ✅ แก้ไข 1: เปลี่ยนชื่อวันเป็นภาษาไทย
   final List<String> days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday"
+    "วันจันทร์",
+    "วันอังคาร",
+    "วันพุธ",
+    "วันพฤหัสบดี",
+    "วันศุกร์",
+    "วันเสาร์",
+    "วันอาทิตย์"
   ];
 
   String? selectedDay;
   List<Map<String, dynamic>> exercises = [];
   List<Map<String, dynamic>> selectedExercises = [];
+
+  final String _baseUrl = "http://10.19.205.169";
+  final String _apiFolder = "flutter_api";
 
   @override
   void initState() {
@@ -42,7 +46,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
   Future<void> loadExercises() async {
     try {
       final res = await http.get(
-        Uri.parse("http://10.0.2.2/flutter_api/get_exercises.php"),
+        Uri.parse("$_baseUrl/$_apiFolder/get_exercises.php"),
       );
       if (res.statusCode == 200) {
         final list = json.decode(res.body) as List;
@@ -54,9 +58,38 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     }
   }
 
+  String _fixImageUrl(String? url) {
+    // เปลี่ยน Placeholder text นิดหน่อย (ภาษาไทยใน URL อาจเพี้ยนได้ ใช้ No Image เหมือนเดิมปลอดภัยสุด)
+    if (url == null || url.isEmpty) return "https://via.placeholder.com/120x120?text=No+Image";
+
+    String finalUrl = url;
+
+    if (url.startsWith("http")) {
+      if (url.contains("localhost") || url.contains("127.0.0.1") || url.contains("10.0.2.2")) {
+        finalUrl = url.replaceAll("localhost", "10.19.205.169")
+                      .replaceAll("127.0.0.1", "10.19.205.169")
+                      .replaceAll("10.0.2.2", "10.19.205.169");
+      }
+      if (finalUrl.contains("fitness_exercises_api")) {
+         finalUrl = finalUrl.replaceAll("fitness_exercises_api", "flutter_api");
+      }
+    } else {
+      if (url.startsWith("uploads/")) {
+         finalUrl = "$_baseUrl/$_apiFolder/$url";
+      } else {
+         finalUrl = "$_baseUrl/$_apiFolder/uploads/$url";
+      }
+    }
+    
+    return finalUrl;
+  }
+
   Future<void> saveSchedule() async {
     if (selectedDay == null) return;
-    final url = Uri.parse("http://10.0.2.2/flutter_api/save_schedule.php");
+    final url = Uri.parse("$_baseUrl/$_apiFolder/save_schedule.php");
+    
+    // หมายเหตุ: เมื่อเปลี่ยน UI วันเป็นไทย ค่าที่ส่งไป Database ก็จะเป็น "วันจันทร์" ฯลฯ
+    // ตรวจสอบให้แน่ใจว่า Database ของคุณรองรับภาษาไทย (UTF-8)
     final body = {
       "user_id": widget.userId.toString(),
       "day": selectedDay!,
@@ -89,6 +122,9 @@ class _ScheduleScreenState extends State<ScheduleScreen>
       onTap: () {
         setState(() {
           selectedDay = d;
+          // ⚠️ ข้อควรระวัง: ถ้าข้อมูลเก่าใน DB เก็บ key เป็นภาษาอังกฤษ (Monday) 
+          // การกดปุ่ม "วันจันทร์" อาจจะไม่โชว์ข้อมูลเก่า
+          // ต้องแก้ DB ให้ key เป็นภาษาไทย หรือเขียน map แปลงค่าครับ
           selectedExercises = widget.existing[d]
                   ?.map((e) => Map<String, dynamic>.from(e))
                   .toList() ??
@@ -117,6 +153,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
           style: TextStyle(
             color: active ? Colors.white : Colors.white70,
             fontWeight: FontWeight.w600,
+            fontFamily: 'Kanit', // แนะนำ: ถ้ามีฟอนต์ไทยสวยๆ ใส่ตรงนี้ได้
           ),
         ),
       ),
@@ -128,7 +165,8 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text("Workout Schedule"),
+        // ✅ แก้ไข 2: ชื่อ AppBar ภาษาไทย
+        title: const Text("ตารางออกกำลังกาย"),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
@@ -148,9 +186,10 @@ class _ScheduleScreenState extends State<ScheduleScreen>
             ),
           ),
           const SizedBox(height: 20),
+          // ✅ แก้ไข 3: หัวข้อส่วนเลือกท่าเป็นภาษาไทย
           const Text(
-            "Select Exercises",
-            style: TextStyle(color: Colors.white, fontSize: 20),
+            "เลือกท่าออกกำลังกาย",
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           Expanded(
@@ -162,11 +201,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                 final sel =
                     selectedExercises.any((x) => x['name'] == ex['name']);
 
-                // ✅ ใช้ image_url จาก backend โดยตรง
-                final imageUrl = (ex['image_url'] != null &&
-                        ex['image_url'].toString().isNotEmpty)
-                    ? ex['image_url']
-                    : "https://via.placeholder.com/120x120?text=No+Image";
+                final imageUrl = _fixImageUrl(ex['image_url']);
 
                 return GestureDetector(
                   onTap: () => toggleExercise(ex),
@@ -197,14 +232,13 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                       ),
                       child: Row(
                         children: [
-                          // ✅ รูปใหญ่เต็มสูงพอดี
                           ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: AspectRatio(
                               aspectRatio: 1,
                               child: Image.network(
                                 imageUrl,
-                                fit: BoxFit.cover, // 🔥 เต็มช่องแบบไม่โดนบีบ
+                                fit: BoxFit.cover, 
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
                                     color: Colors.grey[800],
@@ -218,7 +252,6 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // ✅ ข้อความอยู่ขวา ขยายเต็ม
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'api_config.dart'; // ✅ 1. Import ไฟล์ Config
 import 'bmi_age_screen.dart';
 import 'login_screen.dart';
 
@@ -42,7 +43,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    var uri = Uri.parse("http://10.0.2.2/flutter_api/register.php");
+    // ✅ 2. ใช้ ApiConfig สร้าง URL (แก้ตรงนี้จุดเดียว)
+    var uri = Uri.parse(ApiConfig.getUrl('register.php'));
+    
     var request = http.MultipartRequest("POST", uri);
 
     request.fields['name'] = _nameController.text.trim();
@@ -58,30 +61,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ));
     }
 
-    var response = await request.send();
-    var responseBody = await response.stream.bytesToString();
+    try {
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
 
-    var data = jsonDecode(responseBody);
+      var data = jsonDecode(responseBody);
 
-    print("REGISTER RESPONSE = $data");
+      print("REGISTER RESPONSE = $data");
 
-    if (data["success"] == true) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => BmiAgeScreen(
-            userId: data["user_id"].toString(),
-            name: data["name"],
-            email: data["email"],
-            gender: data["gender"],
-            password: data["password"],
-            profile_image: data["profile_image"] ?? "", // <-- แก้ไขตรงนี้
+      if (data["success"] == true) {
+        if (!mounted) return; // เช็ค mounted ก่อนเปลี่ยนหน้า
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => BmiAgeScreen(
+              userId: data["user_id"].toString(),
+              name: data["name"],
+              email: data["email"],
+              gender: data["gender"],
+              password: data["password"],
+              profile_image: data["profile_image"] ?? "", // ส่งรูปต่อไป
+            ),
           ),
-        ),
-      );
-    } else {
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["message"] ?? "Register failed")),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data["message"] ?? "Register failed")),
+        SnackBar(content: Text("Error: $e")),
       );
     }
   }

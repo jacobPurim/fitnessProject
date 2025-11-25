@@ -12,7 +12,7 @@ class BmiResultScreen extends StatelessWidget {
   final int age;
   final int weight;
   final int height;
-  final String profile_image; // <-- 1. เพิ่มตัวแปรรับค่า
+  final String profile_image;
 
   const BmiResultScreen({
     super.key,
@@ -24,7 +24,7 @@ class BmiResultScreen extends StatelessWidget {
     required this.age,
     required this.weight,
     required this.height,
-    required this.profile_image, // <-- 2. เพิ่มใน constructor
+    required this.profile_image,
   });
 
   double calculateBMI() {
@@ -58,30 +58,17 @@ class BmiResultScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         leading: BackButton(color: Colors.white),
       ),
-
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("Your BMI",
-                style: TextStyle(color: Colors.white70, fontSize: 26)),
-
+            const Text("Your BMI", style: TextStyle(color: Colors.white70, fontSize: 26)),
             Text(
               bmi.toStringAsFixed(1),
-              style: const TextStyle(
-                fontSize: 70,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 70, color: Colors.white, fontWeight: FontWeight.bold),
             ),
-
-            Text(
-              status,
-              style: TextStyle(color: color, fontSize: 28),
-            ),
-
+            Text(status, style: TextStyle(color: color, fontSize: 28)),
             const SizedBox(height: 40),
-
             SizedBox(
               width: 260,
               child: ElevatedButton(
@@ -99,24 +86,18 @@ class BmiResultScreen extends StatelessWidget {
                           "weight": weight,
                           "height": height,
                           "bmi": bmi,
-                          "profile_image": profile_image, // <-- 3. ส่ง profile_image ไป Home
+                          "profile_image": profile_image,
                         },
                       ),
                     ),
                     (route) => false,
                   );
                 },
-                child: const Text("Continue",
-                    style: TextStyle(color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
+                child: const Text("Continue", style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, padding: const EdgeInsets.symmetric(vertical: 14)),
               ),
             ),
-
             const SizedBox(height: 20),
-
             SizedBox(
               width: 260,
               child: ElevatedButton(
@@ -125,6 +106,7 @@ class BmiResultScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) => ProfileScreen(
+                        userId: userId, // ✅ ส่ง userId
                         name: name,
                         email: email,
                         gender: gender,
@@ -132,17 +114,13 @@ class BmiResultScreen extends StatelessWidget {
                         weight: weight,
                         height: height,
                         bmi: bmi,
-                        profile_image: profile_image, // <-- 4. ส่ง profile_image ไป Profile
+                        profile_image: profile_image,
                       ),
                     ),
                   );
                 },
-                child: const Text("View Profile",
-                    style: TextStyle(color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[800],
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
+                child: const Text("View Profile", style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[800], padding: const EdgeInsets.symmetric(vertical: 14)),
               ),
             ),
           ],

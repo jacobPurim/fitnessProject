@@ -1,40 +1,63 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart'; // <-- 1. Import (สำคัญ)
+import 'package:url_launcher/url_launcher.dart';
 
 class NewsScreen extends StatelessWidget {
   const NewsScreen({super.key});
 
-  // 1. สร้าง Data Model (จำลอง)
+  // 1. ข้อมูลจำลอง (สังเกตว่ารายการสุดท้าย ผมลบ imageUrl ทิ้ง เพื่อโชว์ว่ามันดึงจาก YouTube ได้เอง)
   final List<Map<String, String>> dummyNews = const [
     {
-      "title": "5 ท่าออกกำลังกายลดพุงเร็วที่สุด",
-      "imageUrl": "https://i.imgur.com/AtYf0Pb.jpeg",
+      "title": "เล่นกล้าม แต่ทำไมกล้ามไม่ขึ้น",
+      "imageUrl": "",
       "category": "Workout",
-      "readTime": "7 min read",
-      "url": "https://www.google.com/search?q=ท่าออกกำลังกายลดพุง" // <-- (ตัวอย่าง)
+      "readTime": "19 min videio",
+      "url": "https://youtu.be/O0dkfFU-LwQ?si=MnpS4IgioJllSpJk"
     },
     {
-      "title": "วิธีคุมอาหารสำหรับคนเริ่มฟิตเนส",
-      "imageUrl": "https://i.imgur.com/nm9G3oK.jpeg",
-      "category": "Nutrition",
-      "readTime": "5 min read",
-      "url": "https://www.google.com/search?q=วิธีคุมอาหาร" // <-- (ตัวอย่าง)
+      "title": "Mindset ในการลดนำ้หนั",
+      "imageUrl": "",
+      "category": "mindset",
+      "readTime": "16 min videio",
+      "url": "https://youtu.be/J3F2qe3xonM?si=ELohTGs5aGMhhlZg"
     },
     {
-      "title": "ทำไมต้องเวทเทรนนิ่ง? ประโยชน์ที่คุณอาจไม่รู้",
-      "imageUrl": "https://i.imgur.com/zYVZ9zM.jpeg",
-      "category": "Mindset",
-      "readTime": "3 min read",
-      "url": "https://www.google.com/search?q=ประโยชน์เวทเทรนนิ่ง" // <-- (ตัวอย่าง)
-    },
-     {
-      "title": "เทคนิคการวอร์มอัพที่ถูกต้อง ก่อนออกกำลังกาย",
-      "imageUrl": "https://images.pexels.com/photos/949126/pexels-photo-949126.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+      "title": "whey กับ casein ต่างกันยังไง",
+      "imageUrl": "",
       "category": "Technique",
-      "readTime": "4 min read",
-      "url": "https://youtu.be/HRRY-Gdhc0g?si=fBkN_WqahglD0aQl" // <-- 2. ใส่ลิงก์ของคุณ
-    } 
+      "readTime": "4 min videio",
+      "url": "https://youtu.be/_7et5I0uyTE?si=oZJB6Fvc9jlS4Rc5"
+    },
+    {
+      "title": "เทคนิคการวอร์มอัพที่ถูกต้อง ก่อนออกกำลังกาย",
+      "imageUrl": "", // 
+      "category": "Technique",
+      "readTime": "4 min videio",
+      "url": "https://youtu.be/HRRY-Gdhc0g?si=fBkN_WqahglD0aQl" 
+    }
   ];
+
+  // ฟังก์ชันช่วยดึงรูปปกจากลิงก์ YouTube
+  String? _getYoutubeThumbnail(String url) {
+    try {
+      final uri = Uri.tryParse(url);
+      if (uri == null) return null;
+
+      String? videoId;
+      // กรณีลิงก์แบบ youtu.be/ID
+      if (uri.host.contains('youtu.be')) {
+        videoId = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+      } 
+      // กรณีลิงก์แบบ youtube.com/watch?v=ID
+      else if (uri.host.contains('youtube.com')) {
+        videoId = uri.queryParameters['v'];
+      }
+
+      // ส่งกลับเป็นลิงก์รูปภาพคุณภาพสูง (hqdefault)
+      return videoId != null ? 'https://img.youtube.com/vi/$videoId/hqdefault.jpg' : null;
+    } catch (e) {
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,17 +66,14 @@ class NewsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: Colors.white),
+        leading: const BackButton(color: Colors.white),
         title: const Text("Fitness News", style: TextStyle(color: Colors.white)),
       ),
-
-      // 2. ใช้ ListView.builder
       body: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         itemCount: dummyNews.length,
         itemBuilder: (context, index) {
           final newsItem = dummyNews[index];
-          // 3. ส่ง newsItem ไปทั้งก้อน (เหมือนเดิม)
           return _buildNewsCard(
             context: context,
             newsItem: newsItem,
@@ -63,65 +83,63 @@ class NewsScreen extends StatelessWidget {
     );
   }
 
-  // 4. Widget Card
   Widget _buildNewsCard({
     required BuildContext context,
-    required Map<String, String> newsItem, // 5. รับเป็น Map
+    required Map<String, String> newsItem,
   }) {
-    // 6. แตกข้อมูลออกมา
     final String title = newsItem['title']!;
-    final String imageUrl = newsItem['imageUrl']!;
     final String category = newsItem['category']!;
     final String readTime = newsItem['readTime']!;
-    final String? url = newsItem['url']; // <-- 7. ดึง URL ออกมา
+    final String? url = newsItem['url'];
+    
+    //  Logic เลือกรูป: ถ้าดึงจาก YouTube ได้ ให้ใช้ ถ้าไม่ได้ ให้ใช้ imageUrl เดิม
+    String displayImage = newsItem['imageUrl']!;
+    if (url != null) {
+      final ytThumbnail = _getYoutubeThumbnail(url);
+      if (ytThumbnail != null) {
+        displayImage = ytThumbnail;
+      }
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Card(
         color: Colors.grey[900],
         elevation: 4,
-        clipBehavior: Clip.antiAlias, 
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
         child: InkWell(
-          // 8. OnTap (แก้ไขใหม่)
           onTap: () async {
-            // ตรวจสอบว่า url มีค่าหรือไม่
             if (url != null && url.isNotEmpty) {
               final Uri uri = Uri.parse(url);
-              // พยายามเปิดลิงก์
               if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication); // เปิดแอปภายนอก (เช่น YouTube, Chrome)
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
               } else {
-                // ถ้าเปิดไม่ได้ (เช่น ลิงก์ผิด)
-                print("Could not launch $url");
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Cannot open link: $url'))
-                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Cannot open link: $url'))
+                  );
+                }
               }
-            } else {
-              print("No URL for '$title'");
             }
           },
           child: Container(
-            height: 250, 
+            height: 250,
             child: Stack(
               children: [
-                // ( ... โค้ดส่วน UI รูปภาพ ... )
-                // 7. รูปภาพ (อยู่ล่างสุด)
+                // รูปภาพ
                 Container(
                   width: double.infinity,
                   height: double.infinity,
                   child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover, 
+                    displayImage, // ✅ ใช้ตัวแปรที่คำนวณมา
+                    fit: BoxFit.cover,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.redAccent,
-                        ),
+                        child: CircularProgressIndicator(color: Colors.redAccent),
                       );
                     },
                     errorBuilder: (context, error, stackTrace) {
@@ -133,22 +151,28 @@ class NewsScreen extends StatelessWidget {
                   ),
                 ),
 
-                // 10. Gradient Overlay
+                // Gradient Overlay
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withOpacity(0.9), 
-                        Colors.black.withOpacity(0.0), 
+                        Colors.black.withOpacity(0.9),
+                        Colors.black.withOpacity(0.0),
                       ],
-                      stops: const [0.0, 0.7], 
+                      stops: const [0.0, 0.7],
                     ),
                   ),
                 ),
 
-                // 11. ข้อความ (อยู่บนสุด)
+                // Play Icon (แสดงเฉพาะเมื่อเป็นลิงก์ YouTube)
+                if (url != null && (url.contains('youtu.be') || url.contains('youtube.com')))
+                  const Center(
+                    child: Icon(Icons.play_circle_fill, color: Colors.white70, size: 64),
+                  ),
+
+                // ข้อความ
                 Positioned(
                   bottom: 16,
                   left: 16,
@@ -156,12 +180,8 @@ class NewsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 12. "ป้าย" Category
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.redAccent,
                           borderRadius: BorderRadius.circular(20),
@@ -176,8 +196,6 @@ class NewsScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-
-                      // 13. Title (หัวข้อข่าว)
                       Text(
                         title,
                         maxLines: 2,
@@ -189,8 +207,6 @@ class NewsScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-
-                      // 14. Read Time (เวลาอ่าน)
                       Text(
                         readTime,
                         style: TextStyle(

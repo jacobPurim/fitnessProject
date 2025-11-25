@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- อนุญาตให้โหลด HTTP ทั่วไปได้ (สำหรับ Dev) -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
     <domain-config cleartextTrafficPermitted="true">
+        <!-- ✅ 1. เพิ่ม IP เครื่องคอมพิวเตอร์ของคุณ (สำคัญที่สุดสำหรับมือถือจริง) -->
+        <domain includeSubdomains="true">10.19.205.169</domain>
+        
+        <!-- 2. IP สำหรับ Emulator (เก็บไว้เผื่อใช้) -->
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">localhost</domain>
     </domain-config>
