@@ -136,10 +136,10 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
 
   Widget _buildExerciseGrid(List data) {
     if (data.isEmpty) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.fitness_center, size: 64, color: Colors.white12),
             SizedBox(height: 16),
             Text("No exercises yet", style: TextStyle(color: Colors.white30)),
@@ -220,9 +220,9 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                 errorBuilder: (_, __, ___) {
                   return Container(
                     color: Colors.grey[900],
-                    child: Column(
+                    child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.broken_image, color: Colors.white24),
                         SizedBox(height: 4),
                         Text("No Image", style: TextStyle(color: Colors.white24, fontSize: 10)),

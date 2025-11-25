@@ -125,12 +125,12 @@ class NewsScreen extends StatelessWidget {
               }
             }
           },
-          child: Container(
+          child: SizedBox(
             height: 250,
             child: Stack(
               children: [
                 // รูปภาพ
-                Container(
+                SizedBox(
                   width: double.infinity,
                   height: double.infinity,
                   child: Image.network(

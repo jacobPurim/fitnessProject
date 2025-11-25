@@ -114,7 +114,7 @@ class BmiResultScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    "ความสูง ${height} ซม. และน้ำหนัก ${weight} กก.", 
+                    "ความสูง $height ซม. และน้ำหนัก $weight กก.", 
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)
                   ),
@@ -161,14 +161,14 @@ class BmiResultScreen extends StatelessWidget {
                     (route) => false,
                   );
                 },
-                child: const Text(
-                  "ดำเนินการต่อ", 
-                  style: TextStyle(color: Colors.white, fontSize: 20)
-                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent, 
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+                child: const Text(
+                  "ดำเนินการต่อ", 
+                  style: TextStyle(color: Colors.white, fontSize: 20)
                 ),
               ),
             ),

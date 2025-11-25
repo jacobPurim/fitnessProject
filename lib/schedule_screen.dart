@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -53,14 +54,40 @@ class _ScheduleScreenState extends State<ScheduleScreen>
   @override
   void initState() {
     super.initState();
-    
-    // คัดลอกข้อมูลเดิมลงตัวแปร tempSchedule
+      if (widget.userId == 0) {
+      Future.delayed(Duration.zero, () {
+      _showLoginRequiredDialog();
+    });
+    return;
+  }
     for (var day in days) {
       tempSchedule[day] = widget.existing[day]?.map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
     }
     
     loadExercises();
   }
+  void _showLoginRequiredDialog() {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      title: const Text("ไปLoginนะน้อง"),
+      content: const Text("คุณต้องเข้าสู่ระบบก่อนจึงจะดูตารางออกกำลังกายได้"),
+      actions: [
+        TextButton(
+          child: const Text("OK"),
+          onPressed: () {
+          Navigator.of(context).pop();
+          Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      },
+
+        ),
+      ],
+    ),
+  );
+}
 
   Future<void> loadExercises() async {
     try {
@@ -199,8 +226,8 @@ class _ScheduleScreenState extends State<ScheduleScreen>
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.redAccent,
-        child: const Icon(Icons.check),
         onPressed: saveSchedule,
+        child: const Icon(Icons.check),
       ),
       body: Column(
         children: [

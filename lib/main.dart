@@ -81,9 +81,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             controller: _pageController,
             itemCount: images.length,
             onPageChanged: (index) {
-              if (mounted) setState(() {
+              if (mounted) {
+                setState(() {
                 _currentPage = index;
               });
+              }
             },
             itemBuilder: (context, index) {
               return Image.asset(
