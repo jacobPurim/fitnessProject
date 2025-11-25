@@ -71,11 +71,11 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     context: context,
     barrierDismissible: false,
     builder: (context) => AlertDialog(
-      title: const Text("ไปLoginนะน้อง"),
+      title: const Text("You must be login first!!!"),
       content: const Text("คุณต้องเข้าสู่ระบบก่อนจึงจะดูตารางออกกำลังกายได้"),
       actions: [
         TextButton(
-          child: const Text("OK"),
+          child: const Text("Go to Login page"),
           onPressed: () {
           Navigator.of(context).pop();
           Navigator.of(context).pushReplacement(
