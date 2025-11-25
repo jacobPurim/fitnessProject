@@ -19,27 +19,46 @@ class ScheduleScreen extends StatefulWidget {
 class _ScheduleScreenState extends State<ScheduleScreen>
     with SingleTickerProviderStateMixin {
   
-  // ✅ แก้ไข 1: เปลี่ยนชื่อวันเป็นภาษาไทย
   final List<String> days = [
-    "วันจันทร์",
-    "วันอังคาร",
-    "วันพุธ",
-    "วันพฤหัสบดี",
-    "วันศุกร์",
-    "วันเสาร์",
-    "วันอาทิตย์"
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
   ];
 
-  String? selectedDay;
-  List<Map<String, dynamic>> exercises = [];
-  List<Map<String, dynamic>> selectedExercises = [];
+  final Map<String, String> dayNameMap = {
+    "Monday": "จันทร์",
+    "Tuesday": "อังคาร",
+    "Wednesday": "พุธ",
+    "Thursday": "พฤหัส",
+    "Friday": "ศุกร์",
+    "Saturday": "เสาร์",
+    "Sunday": "อาทิตย์",
+  };
 
-  final String _baseUrl = "http://10.19.205.169";
-  final String _apiFolder = "flutter_api";
+  String selectedDay = "Monday";
+  
+  // เก็บข้อมูลชั่วคราวเพื่อไม่ให้หายตอนสลับวัน
+  Map<String, List<Map<String, dynamic>>> tempSchedule = {};
+
+  List<Map<String, dynamic>> exercises = [];
+
+  // ✅ ตั้งค่า IP และ Folder
+  final String _baseUrl = "http://10.0.2.2";
+  final String _apiFolder = "flutter_api"; 
 
   @override
   void initState() {
     super.initState();
+    
+    // คัดลอกข้อมูลเดิมลงตัวแปร tempSchedule
+    for (var day in days) {
+      tempSchedule[day] = widget.existing[day]?.map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+    }
+    
     loadExercises();
   }
 
@@ -59,21 +78,23 @@ class _ScheduleScreenState extends State<ScheduleScreen>
   }
 
   String _fixImageUrl(String? url) {
-    // เปลี่ยน Placeholder text นิดหน่อย (ภาษาไทยใน URL อาจเพี้ยนได้ ใช้ No Image เหมือนเดิมปลอดภัยสุด)
     if (url == null || url.isEmpty) return "https://via.placeholder.com/120x120?text=No+Image";
-
+    
     String finalUrl = url;
 
     if (url.startsWith("http")) {
-      if (url.contains("localhost") || url.contains("127.0.0.1") || url.contains("10.0.2.2")) {
-        finalUrl = url.replaceAll("localhost", "10.19.205.169")
-                      .replaceAll("127.0.0.1", "10.19.205.169")
-                      .replaceAll("10.0.2.2", "10.19.205.169");
+      // แก้ IP ให้ตรงกับ _baseUrl (10.0.2.2)
+      if (url.contains("localhost") || url.contains("127.0.0.1")) {
+        finalUrl = url.replaceAll("localhost", "10.0.2.2")
+                      .replaceAll("127.0.0.1", "10.0.2.2");
       }
+      
+      // ✅ แก้ไขจุดที่ Error: ถ้าเจอ fitness_exercises_api ให้เปลี่ยนเป็น flutter_api
       if (finalUrl.contains("fitness_exercises_api")) {
-         finalUrl = finalUrl.replaceAll("fitness_exercises_api", "flutter_api");
+         finalUrl = finalUrl.replaceAll("fitness_exercises_api", _apiFolder);
       }
     } else {
+      // ถ้ามาแค่ชื่อไฟล์
       if (url.startsWith("uploads/")) {
          finalUrl = "$_baseUrl/$_apiFolder/$url";
       } else {
@@ -84,51 +105,59 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     return finalUrl;
   }
 
+  // บันทึกข้อมูลของ "ทุกวัน" ในรอบเดียว
   Future<void> saveSchedule() async {
-    if (selectedDay == null) return;
-    final url = Uri.parse("$_baseUrl/$_apiFolder/save_schedule.php");
-    
-    // หมายเหตุ: เมื่อเปลี่ยน UI วันเป็นไทย ค่าที่ส่งไป Database ก็จะเป็น "วันจันทร์" ฯลฯ
-    // ตรวจสอบให้แน่ใจว่า Database ของคุณรองรับภาษาไทย (UTF-8)
-    final body = {
-      "user_id": widget.userId.toString(),
-      "day": selectedDay!,
-      "exercises": json.encode(selectedExercises),
-      "clear_old": "1",
-    };
-    final res = await http.post(url, body: body);
-    if (res.statusCode == 200) {
-      final decoded = json.decode(res.body);
-      if (decoded['success'] == true) {
+    try {
+      // ใช้ save_schedule_all.php (แบบส่งทีเดียว) หรือ save_schedule.php (แบบวนลูป) ก็ได้
+      // ในที่นี้ใช้วิธีวนลูปส่งทีละวันตามโค้ดเดิมของคุณเพื่อความชัวร์กับ backend เดิม
+      final url = Uri.parse("$_baseUrl/$_apiFolder/save_schedule.php");
+      
+      List<Future> requests = [];
+
+      tempSchedule.forEach((dayKey, exs) {
+         final body = {
+          "user_id": widget.userId.toString(),
+          "day": dayKey, 
+          "exercises": json.encode(exs),
+          "clear_old": "1",
+        };
+        requests.add(http.post(url, body: body));
+      });
+
+      await Future.wait(requests);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text("บันทึกตารางครบทุกวันเรียบร้อยแล้ว")),
+        );
         Navigator.pop(context, true);
       }
+    } catch (e) {
+      debugPrint("Error saving: $e");
     }
   }
 
   void toggleExercise(Map<String, dynamic> ex) {
-    final idx = selectedExercises.indexWhere((x) => x['name'] == ex['name']);
     setState(() {
-      if (idx >= 0) {
-        selectedExercises.removeAt(idx);
+      final currentDayList = tempSchedule[selectedDay]!;
+      final index = currentDayList.indexWhere((x) => x['name'] == ex['name']);
+
+      if (index >= 0) {
+        currentDayList.removeAt(index);
       } else {
-        selectedExercises.add(ex);
+        currentDayList.add(Map.from(ex));
       }
     });
   }
 
-  Widget _dayButton(String d) {
-    final active = d == selectedDay;
+  Widget _dayButton(String engDay) {
+    final active = engDay == selectedDay;
+    final String labelToShow = dayNameMap[engDay] ?? engDay; 
+
     return GestureDetector(
       onTap: () {
         setState(() {
-          selectedDay = d;
-          // ⚠️ ข้อควรระวัง: ถ้าข้อมูลเก่าใน DB เก็บ key เป็นภาษาอังกฤษ (Monday) 
-          // การกดปุ่ม "วันจันทร์" อาจจะไม่โชว์ข้อมูลเก่า
-          // ต้องแก้ DB ให้ key เป็นภาษาไทย หรือเขียน map แปลงค่าครับ
-          selectedExercises = widget.existing[d]
-                  ?.map((e) => Map<String, dynamic>.from(e))
-                  .toList() ??
-              [];
+          selectedDay = engDay; 
         });
       },
       child: AnimatedContainer(
@@ -149,11 +178,10 @@ class _ScheduleScreenState extends State<ScheduleScreen>
               : [],
         ),
         child: Text(
-          d,
+          labelToShow,
           style: TextStyle(
             color: active ? Colors.white : Colors.white70,
             fontWeight: FontWeight.w600,
-            fontFamily: 'Kanit', // แนะนำ: ถ้ามีฟอนต์ไทยสวยๆ ใส่ตรงนี้ได้
           ),
         ),
       ),
@@ -165,7 +193,6 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        // ✅ แก้ไข 2: ชื่อ AppBar ภาษาไทย
         title: const Text("ตารางออกกำลังกาย"),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
@@ -186,10 +213,21 @@ class _ScheduleScreenState extends State<ScheduleScreen>
             ),
           ),
           const SizedBox(height: 20),
-          // ✅ แก้ไข 3: หัวข้อส่วนเลือกท่าเป็นภาษาไทย
-          const Text(
-            "เลือกท่าออกกำลังกาย",
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                 const Text(
+                  "เลือกท่าออกกำลังกาย",
+                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "(${dayNameMap[selectedDay]})",
+                  style: const TextStyle(color: Colors.redAccent, fontSize: 16),
+                )
+              ],
+            ),
           ),
           const SizedBox(height: 10),
           Expanded(
@@ -198,9 +236,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
               padding: const EdgeInsets.all(12),
               childAspectRatio: 3 / 1.3,
               children: exercises.map((ex) {
-                final sel =
-                    selectedExercises.any((x) => x['name'] == ex['name']);
-
+                final sel = tempSchedule[selectedDay]!.any((x) => x['name'] == ex['name']);
                 final imageUrl = _fixImageUrl(ex['image_url']);
 
                 return GestureDetector(
@@ -227,7 +263,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                               color: Colors.redAccent.withOpacity(0.4),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
-                            ),
+                            )
                         ],
                       ),
                       child: Row(
@@ -238,7 +274,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                               aspectRatio: 1,
                               child: Image.network(
                                 imageUrl,
-                                fit: BoxFit.cover, 
+                                fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
                                     color: Colors.grey[800],
@@ -278,6 +314,11 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                               ],
                             ),
                           ),
+                          if (sel)
+                             const Padding(
+                               padding: EdgeInsets.only(right: 8.0),
+                               child: Icon(Icons.check_circle, color: Colors.redAccent),
+                             )
                         ],
                       ),
                     ),

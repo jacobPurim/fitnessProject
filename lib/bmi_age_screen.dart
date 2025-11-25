@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'bmi_weight_screen.dart';
+import 'bmi_weight_screen.dart'; // ตรวจสอบว่ามีไฟล์นี้อยู่ในโปรเจกต์ของคุณ
 
 class BmiAgeScreen extends StatefulWidget {
-  final String userId;  
+  final String userId;
   final String name;
   final String email;
   final String gender;
   final String password;
-  final String profile_image; // <-- 1. เพิ่มตัวแปรรับค่า
+  final String profile_image; // ตัวแปรรับค่า
 
   const BmiAgeScreen({
     super.key,
@@ -16,7 +16,7 @@ class BmiAgeScreen extends StatefulWidget {
     required this.email,
     required this.gender,
     required this.password,
-    required this.profile_image, // <-- 2. เพิ่มใน constructor
+    required this.profile_image, // ใน constructor
   });
 
   @override
@@ -32,49 +32,67 @@ class _BmiAgeScreenState extends State<BmiAgeScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: BackButton(color: Colors.white),
+        leading: const BackButton(color: Colors.white),
+        elevation: 0, // ลบเงาของ AppBar
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const SizedBox(height: 20),
-          const Text(
-            "How Old Are You?",
-            style: TextStyle(color: Colors.white, fontSize: 28),
-          ),
 
+          // 1. หัวข้อภาษาไทย
+          const Text(
+            "คุณอายุเท่าไหร่?",
+            style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+
+          // 2. แสดงตัวเลขปัจจุบัน (แสดงหน่วย "ปี" ไว้)
           Text(
-            "$age",
+            "$age ปี", // <-- **คงหน่วย " ปี" ไว้ตามต้องการ**
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 60,
+              fontSize: 80, 
               fontWeight: FontWeight.bold,
             ),
           ),
-
-          SizedBox(
-            height: 140,
-            child: ListWheelScrollView.useDelegate(
-              itemExtent: 40,
-              physics: const FixedExtentScrollPhysics(),
-              onSelectedItemChanged: (v) {
-                setState(() => age = v + 10);
-              },
-              childDelegate: ListWheelChildBuilderDelegate(
-                builder: (_, i) => Center(
-                  child: Text(
-                    "${i + 10}",
-                    style: TextStyle(
-                      color: (i + 10 == age) ? Colors.white : Colors.white30,
-                      fontSize: (i + 10 == age) ? 28 : 20,
-                    ),
+          
+          // 3. ปรับปรุง ListWheelScrollView (ลบ "ปี" ออกจากรายการ)
+          Expanded( 
+            child: Center(
+              child: SizedBox(
+                height: 200, 
+                child: ListWheelScrollView.useDelegate(
+                  itemExtent: 50, 
+                  diameterRatio: 1.5, 
+                  perspective: 0.005, 
+                  physics: const FixedExtentScrollPhysics(),
+                  onSelectedItemChanged: (v) {
+                    setState(() => age = v + 10);
+                  },
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    builder: (_, i) {
+                      final currentAge = i + 10;
+                      final isSelected = currentAge == age;
+                      return Center(
+                        child: Text(
+                          "$currentAge", // <-- **ลบหน่วย " ปี" ออกตามต้องการ**
+                          style: TextStyle(
+                            color: isSelected ? Colors.orange : Colors.white70,
+                            fontSize: isSelected ? 36 : 24, 
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      );
+                    },
+                    childCount: 70,
                   ),
                 ),
-                childCount: 70,
               ),
             ),
           ),
-
+          
+          // 4. ปุ่ม Continue ภาษาไทย (ไม่มีการเปลี่ยนแปลง)
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: ElevatedButton(
@@ -88,21 +106,24 @@ class _BmiAgeScreenState extends State<BmiAgeScreen> {
                       email: widget.email,
                       gender: widget.gender,
                       password: widget.password,
-                      age: age,
-                      profile_image: widget.profile_image, // <-- 3. ส่งต่อ
+                      age: age, // ส่งค่า age
+                      profile_image: widget.profile_image, // ส่งต่อ profile_image
                     ),
                   ),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                minimumSize: const Size(double.infinity, 56), 
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
+                elevation: 5, 
               ),
-              child: const Text("Continue",
-                  style: TextStyle(color: Colors.white, fontSize: 18)),
+              child: const Text(
+                "ดำเนินการต่อ",
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
           )
         ],

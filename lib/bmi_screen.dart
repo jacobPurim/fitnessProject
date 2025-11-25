@@ -16,6 +16,7 @@ class _BmiScreenState extends State<BmiScreen> {
   double _bmi = 0;
   String _resultText = "";
   Color _resultColor = Colors.green; // สีเริ่มต้น
+  String _detailText = ""; // เพิ่ม state สำหรับคำอธิบายรายละเอียด
 
   @override
   void initState() {
@@ -31,21 +32,42 @@ class _BmiScreenState extends State<BmiScreen> {
     final double heightInMeters = _currentHeight / 100;
     final double bmi = _currentWeight / (heightInMeters * heightInMeters);
 
+    String status;
+    Color color;
+    String detail;
+
+    // --- เกณฑ์การจำแนก BMI (WHO Standard) ---
+    if (bmi < 18.5) {
+      status = "น้ำหนักต่ำกว่าเกณฑ์";
+      color = Colors.blue[300]!;
+      detail = "คุณมีน้ำหนักน้อยกว่าปกติ ควรรับประทานอาหารให้เพียงพอและปรึกษาผู้เชี่ยวชาญด้านสุขภาพเพื่อเพิ่มน้ำหนักอย่างเหมาะสม";
+    } else if (bmi < 25) {
+      status = "น้ำหนักปกติ";
+      color = Colors.green[400]!;
+      detail = "เยี่ยมมาก! คุณมีน้ำหนักอยู่ในเกณฑ์ที่เหมาะสมและมีสุขภาพดี ควรรักษาระดับน้ำหนักนี้ไว้";
+    } else if (bmi < 30) {
+      status = "น้ำหนักเกิน";
+      color = Colors.orange[400]!;
+      detail = "คุณมีน้ำหนักเกินกว่าเกณฑ์เล็กน้อย ควรเริ่มควบคุมอาหารและออกกำลังกายเพื่อป้องกันภาวะอ้วน";
+    } else if (bmi < 35) {
+      status = "อ้วน ระดับ 1";
+      color = Colors.deepOrange;
+      detail = "คุณอยู่ในภาวะอ้วนระดับ 1 ซึ่งมีความเสี่ยงต่อโรคเรื้อรังสูงขึ้น ควรลดน้ำหนักอย่างจริงจัง";
+    } else if (bmi < 40) {
+      status = "อ้วน ระดับ 2";
+      color = Colors.red;
+      detail = "คุณอยู่ในภาวะอ้วนระดับ 2 ควรปรึกษาแพทย์หรือผู้เชี่ยวชาญด้านโภชนาการทันทีเพื่อวางแผนการลดน้ำหนักอย่างปลอดภัย";
+    } else {
+      status = "อ้วน ระดับ 3 (อันตรายมาก)";
+      color = Colors.red[800]!;
+      detail = "คุณอยู่ในภาวะอ้วนระดับ 3 ซึ่งมีความเสี่ยงสูงมากต่อภาวะแทรกซ้อนที่อันตรายต่อสุขภาพ ควรได้รับการดูแลและรักษาจากแพทย์อย่างใกล้ชิด";
+    }
+
     setState(() {
       _bmi = bmi;
-      if (bmi < 18.5) {
-        _resultText = "Underweight";
-        _resultColor = Colors.blue[300]!;
-      } else if (bmi < 25) {
-        _resultText = "Normal";
-        _resultColor = Colors.green[400]!;
-      } else if (bmi < 30) {
-        _resultText = "Overweight";
-        _resultColor = Colors.orange[400]!;
-      } else {
-        _resultText = "Obesity";
-        _resultColor = Colors.red[400]!;
-      }
+      _resultText = status;
+      _resultColor = color;
+      _detailText = detail;
     });
   }
 
@@ -53,71 +75,89 @@ class _BmiScreenState extends State<BmiScreen> {
 
   // วิดเจ็ตสำหรับแสดงผลลัพธ์ (วงกลม)
   Widget _buildResultDisplay() {
-    return SizedBox(
-      width: 260,
-      height: 260,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // วงกลมพื้นหลัง
-          Container(
-            width: 260,
-            height: 260,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey[900],
-              border: Border.all(
-                color: _resultColor,
-                width: 12,
+    return Column(
+      children: [
+        SizedBox(
+          width: 260,
+          height: 260,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // วงกลมพื้นหลัง
+              Container(
+                width: 260,
+                height: 260,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.grey[900],
+                  border: Border.all(
+                    color: _resultColor,
+                    width: 12,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _resultColor.withOpacity(0.3),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    )
+                  ],
+                ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: _resultColor.withOpacity(0.3),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                )
-              ],
+              // ข้อความแสดงผล
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _bmi.toStringAsFixed(1),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 72,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    "BMI",
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _resultColor,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _resultText, // สถานะภาษาไทย
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        // คำอธิบายละเอียด
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            _detailText, // รายละเอียดคำอธิบาย
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey[300],
+              fontSize: 16,
+              height: 1.4,
             ),
           ),
-          // ข้อความแสดงผล
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _bmi.toStringAsFixed(1),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 72,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                "BMI",
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _resultColor,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _resultText,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          )
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -145,7 +185,7 @@ class _BmiScreenState extends State<BmiScreen> {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                title,
+                title, // ชื่อภาษาไทย
                 style: TextStyle(color: Colors.grey[400], fontSize: 18),
               ),
               Row(
@@ -160,7 +200,7 @@ class _BmiScreenState extends State<BmiScreen> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    unit,
+                    unit, // หน่วยภาษาไทย
                     style: TextStyle(color: Colors.grey[400], fontSize: 16),
                   ),
                 ],
@@ -202,7 +242,7 @@ class _BmiScreenState extends State<BmiScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text("BMI Calculator", style: TextStyle(color: Colors.white)),
+        title: const Text("เครื่องคำนวณ BMI", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -212,15 +252,15 @@ class _BmiScreenState extends State<BmiScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 1. ผลลัพธ์ (ย้ายมาไว้ข้างบน)
+            // 1. ผลลัพธ์และคำอธิบาย
             _buildResultDisplay(),
             
             const SizedBox(height: 30),
 
             // 2. Slider ส่วนสูง
             _buildSliderCard(
-              title: "Height",
-              unit: "cm",
+              title: "ส่วนสูง", // ภาษาไทย
+              unit: "ซม.", // ภาษาไทย
               value: _currentHeight,
               min: 100,
               max: 220,
@@ -233,8 +273,8 @@ class _BmiScreenState extends State<BmiScreen> {
 
             // 3. Slider น้ำหนัก
             _buildSliderCard(
-              title: "Weight",
-              unit: "kg",
+              title: "น้ำหนัก", // ภาษาไทย
+              unit: "กก.", // ภาษาไทย
               value: _currentWeight,
               min: 30,
               max: 150,
@@ -242,8 +282,6 @@ class _BmiScreenState extends State<BmiScreen> {
                 setState(() => _currentWeight = value);
               },
             ),
-
-            // ไม่ต้องมีปุ่ม "Calculate" เพราะมันคำนวณสด
           ],
         ),
       ),

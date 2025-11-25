@@ -18,10 +18,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // ⚠️ list นี้ต้องเป็นภาษาอังกฤษเหมือนเดิมเพื่อให้ตรงกับ Database/API
-  final List<String> days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  final List<String> days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+  ];
   
-  // ✅ เพิ่มตัวแปลงภาษาสำหรับแสดงผลวัน
   final Map<String, String> dayTranslations = {
     "Monday": "วันจันทร์",
     "Tuesday": "วันอังคาร",
@@ -33,10 +39,10 @@ class _HomeScreenState extends State<HomeScreen> {
   };
 
   Map<String, List<Map<String, dynamic>>> schedule = {};
-
   Map<String, dynamic>? _currentUser;
 
-  final String _baseUrl = "http://10.19.205.169";
+  // ✅ ใช้ IP สำหรับ Emulator
+  final String _baseUrl = "http://10.0.2.2";
   final String _profileFolder = "flutter_api";        
   final String _exerciseFolder = "flutter_api";
 
@@ -83,24 +89,27 @@ class _HomeScreenState extends State<HomeScreen> {
          finalUrl = "$_baseUrl/$_exerciseFolder/uploads/$url";
        }
     } else {
+       // ✅ ถ้าเจอ localhost ให้เปลี่ยนเป็น 10.0.2.2 (สำหรับ Emulator)
        if (url.contains("localhost") || url.contains("10.0.2.2")) {
-          finalUrl = url.replaceAll("localhost", "10.19.205.169")
-                        .replaceAll("10.0.2.2", "10.19.205.169");
+          finalUrl = url.replaceAll("localhost", "10.0.2.2")
+                        .replaceAll("10.0.2.2", "10.0.2.2");
        }
-       if (finalUrl.contains("fitness_exercises_api")) {
-          finalUrl = finalUrl.replaceAll("fitness_exercises_api", "flutter_api");
+       if (finalUrl.contains("fitness_exercises_api") && _exerciseFolder == "flutter_api") {
+          finalUrl = finalUrl.replaceAll("fitness_exercises_api", _exerciseFolder);
        }
     }
     return finalUrl;
   }
 
   Future<void> loadSchedule() async {
-    final rawId = user['id']; 
+    final rawId = user['id'];
     final userId = _safeInt(rawId, 0);
     if (userId == 0) return;
 
     try {
-      final res = await http.get(Uri.parse("$_baseUrl/$_profileFolder/get_schedule.php?user_id=$userId"));
+      final url = Uri.parse("$_baseUrl/$_profileFolder/get_schedule.php?user_id=$userId");
+      
+      final res = await http.get(url);
       if (res.statusCode == 200) {
         final List data = json.decode(res.body);
         schedule = {for (var d in days) d: []};
@@ -110,7 +119,8 @@ class _HomeScreenState extends State<HomeScreen> {
           schedule[day]!.add({
             "name": _safeString(row["exercise_name"]),
             "type": _safeString(row["exercise_type"]),
-            "image": _safeString(row["image_url"]),
+            // ✅ ใช้ key "image_url" ให้ตรงกัน
+            "image_url": _safeString(row["image_url"]), 
           });
         }
         setState(() {});
@@ -121,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> openSchedule() async {
-    final userId = _safeInt(user['id']); 
+    final userId = _safeInt(user['id']);
     final refreshed = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => ScheduleScreen(userId: userId, existing: schedule)),
@@ -131,7 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openProfile() async {
     final userId = user['id'];
-    
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -164,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.15),
+              color: const Color(0xFFFF6A00).withOpacity(0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: Colors.redAccent),
@@ -177,7 +186,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _scheduleCard(Map<String, dynamic> ex) {
-    final imgUrl = _getExerciseImageUrl(_safeString(ex['image']));
+    // ✅ เรียกใช้ key "image_url"
+    final imgUrl = _getExerciseImageUrl(_safeString(ex['image_url'])); 
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -203,9 +213,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ClipRRect(
             borderRadius: const BorderRadius.only(topRight: Radius.circular(16), bottomRight: Radius.circular(16)),
             child: Image.network(
-              imgUrl, 
-              width: 120, 
-              height: 120, 
+              imgUrl,
+              width: 120,
+              height: 120,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
@@ -225,7 +235,6 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: days.map((day) {
         final list = schedule[day] ?? [];
-        // ✅ แปลงชื่อวันภาษาอังกฤษ เป็นภาษาไทย
         final thaiDayName = dayTranslations[day] ?? day;
 
         return Column(
@@ -244,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = _safeString(user['name'], "ผู้ใช้"); // เปลี่ยน User เป็น ผู้ใช้
+    final displayName = _safeString(user['name'], "ผู้ใช้");
     final profileImageName = _safeString(user['profile_image']);
     final profileImageUrl = _getProfileImageUrl(profileImageName);
 
@@ -262,7 +271,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ✅ แก้คำทักทาย
                       Text("สวัสดี, $displayName ", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
                       const SizedBox(height: 4),
                       const Text("พร้อมลุยกันหรือยัง?", style: TextStyle(color: Colors.redAccent, fontSize: 16)),
@@ -270,31 +278,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   GestureDetector(
                     onTap: _openProfile,
-                    child: Container(
-                      width: 52, height: 52,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.grey[800],
-                        border: Border.all(color: Colors.white24, width: 1),
-                      ),
-                      child: ClipOval(
-                        child: (profileImageName.isNotEmpty)
-                            ? Image.network(
-                                profileImageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(10.0),
-                                    child: Icon(Icons.person, color: Colors.white),
-                                  );
-                                },
-                              )
-                            : const Padding(
-                                padding: EdgeInsets.all(10.0),
-                                child: Icon(Icons.person, color: Colors.white),
-                              ),
-                      ),
-                    ),
+                    child: (profileImageName.isNotEmpty)
+                        ? CircleAvatar(
+                            radius: 26,
+                            backgroundColor: Colors.grey[800],
+                            backgroundImage: NetworkImage(profileImageUrl),
+                            onBackgroundImageError: (exception, stackTrace) {},
+                          )
+                        : const CircleAvatar(
+                            radius: 26,
+                            backgroundColor: Colors.redAccent,
+                            child: Icon(Icons.person, color: Colors.white)
+                          ),
                   )
                 ],
               ),
@@ -302,7 +297,6 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // ✅ แก้เมนูเป็นภาษาไทย
                   _menu(Icons.access_time, "ตารางฝึก", openSchedule),
                   _menu(Icons.fitness_center, "ท่าบริหาร", () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const ExercisesScreen()));
@@ -316,7 +310,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 35),
-              // ✅ แก้หัวข้อตารางฝึก
               const Text("📅 ตารางฝึกสัปดาห์นี้", style: TextStyle(color: Colors.redAccent, fontSize: 22)),
               const SizedBox(height: 18),
               _weeklyScheduleView(),
@@ -326,4 +319,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}   
+}

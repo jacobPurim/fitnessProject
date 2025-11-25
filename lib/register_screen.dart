@@ -1,12 +1,17 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+
 import 'package:image_picker/image_picker.dart';
+
 import 'package:http/http.dart' as http;
+
 import 'dart:convert';
 
-import 'api_config.dart'; // ✅ 1. Import ไฟล์ Config
-import 'bmi_age_screen.dart';
-import 'login_screen.dart';
+// สมมติว่าไฟล์เหล่านี้มีอยู่จริง
+import 'bmi_age_screen.dart'; 
+import 'login_screen.dart'; 
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,8 +27,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  String? _selectedGender;
+  String? _selectedGender; // จะเก็บค่าเป็น "Male" หรือ "Female"
   File? _pickedImage;
+
 
   // -------------------------
   // เลือกรูปโปรไฟล์
@@ -37,23 +43,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+
   // -------------------------
-  // REGISTER + UPLOAD IMAGE
+  // REGISTER + UPLOAD IMAGE (พร้อมการตรวจสอบการเลือกเพศ)
   // -------------------------
   Future<void> _register() async {
+    // 1. ตรวจสอบ Validation ของ TextFormField
     if (!_formKey.currentState!.validate()) return;
 
-    // ✅ 2. ใช้ ApiConfig สร้าง URL (แก้ตรงนี้จุดเดียว)
-    var uri = Uri.parse(ApiConfig.getUrl('register.php'));
+    // 2. *** บังคับเลือกเพศ (Mandatory Gender Check) ***
+    if (_selectedGender == null || _selectedGender!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("กรุณาเลือกเพศด้วย")), // แจ้งเตือนภาษาไทย
+      );
+      return; // หยุดการทำงานถ้ายังไม่ได้เลือกเพศ
+    }
     
+    // URL สำหรับ API (ต้องใช้ IP address ของเครื่องคอมพิวเตอร์จริง)
+    var uri = Uri.parse("http://10.0.2.2/flutter_api/register.php"); 
     var request = http.MultipartRequest("POST", uri);
 
+    // 3. ส่งข้อมูลเป็นภาษาอังกฤษตามเดิม: name, email, password, gender
     request.fields['name'] = _nameController.text.trim();
     request.fields['email'] = _emailController.text.trim();
     request.fields['password'] = _passwordController.text.trim();
-    request.fields['gender'] = _selectedGender ?? "";
+    request.fields['gender'] = _selectedGender!; // ส่งค่า "Male" หรือ "Female"
 
-    // ถ้ามีรูป → แนบไปกับ POST
+    // ถ้ามีรูป → แนบไปกับ POST (ใช้ field name 'profile_image' เหมือนเดิม)
     if (_pickedImage != null) {
       request.files.add(await http.MultipartFile.fromPath(
         'profile_image',
@@ -61,51 +77,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ));
     }
 
-    try {
-      var response = await request.send();
-      var responseBody = await response.stream.bytesToString();
+    var response = await request.send();
+    var responseBody = await response.stream.bytesToString();
 
-      var data = jsonDecode(responseBody);
+    var data = jsonDecode(responseBody);
 
-      print("REGISTER RESPONSE = $data");
+    print("REGISTER RESPONSE = $data");
 
-      if (data["success"] == true) {
-        if (!mounted) return; // เช็ค mounted ก่อนเปลี่ยนหน้า
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => BmiAgeScreen(
-              userId: data["user_id"].toString(),
-              name: data["name"],
-              email: data["email"],
-              gender: data["gender"],
-              password: data["password"],
-              profile_image: data["profile_image"] ?? "", // ส่งรูปต่อไป
-            ),
+    if (data["success"] == true) {
+      // ส่งค่าไปยังหน้าถัดไป
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BmiAgeScreen(
+            userId: data["user_id"].toString(),
+            name: data["name"],
+            email: data["email"],
+            gender: data["gender"],
+            password: data["password"],
+            profile_image: data["profile_image"] ?? "",
           ),
-        );
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["message"] ?? "Register failed")),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
+        ),
+      );
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        SnackBar(content: Text(data["message"] ?? "ลงทะเบียนไม่สำเร็จ")),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
+      // AppBar ถูกนำออกเพื่อลบปุ่มย้อนกลับด้านบนซ้าย
+      
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -114,14 +121,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // -------------------------
+                // TITLE (ภาษาไทย)
+                // -------------------------
                 const Text(
-                  "Create Account",
+                  "สร้างบัญชีใหม่",
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 32,
                       fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 30),
+                
+                // -------------------------
+                // PROFILE IMAGE LABEL (ใหม่: "รูปโปรไฟล์ (ไม่บังคับ)")
+                // -------------------------
+                const Text(
+                  "รูปโปรไฟล์ (ไม่บังคับ)",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 10), // เว้นระยะห่างจาก CircleAvatar
 
                 // -------------------------
                 // PROFILE IMAGE PICKER
@@ -143,64 +165,66 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 25),
 
                 // -------------------------
-                // FULL NAME
+                // FULL NAME (ภาษาไทย)
                 // -------------------------
                 TextFormField(
                   controller: _nameController,
                   style: const TextStyle(color: Colors.white),
-                  decoration: _inputDecoration("Full Name"),
+                  decoration: _inputDecoration("ชื่อ-นามสกุล"),
                   validator: (v) =>
-                      v!.isEmpty ? "Please enter your name" : null,
+                      v!.isEmpty ? "กรุณาใส่ชื่อ-นามสกุลของคุณ" : null,
                 ),
                 const SizedBox(height: 16),
 
                 // -------------------------
-                // EMAIL
+                // EMAIL (ภาษาไทย)
                 // -------------------------
                 TextFormField(
                   controller: _emailController,
                   style: const TextStyle(color: Colors.white),
-                  decoration: _inputDecoration("Email"),
+                  decoration: _inputDecoration("อีเมล"),
                   validator: (v) =>
-                      v!.isEmpty ? "Please enter your email" : null,
+                      v!.isEmpty ? "กรุณาใส่อีเมลของคุณ" : null,
                 ),
                 const SizedBox(height: 16),
 
                 // -------------------------
-                // PASSWORD
+                // PASSWORD (ภาษาไทย)
                 // -------------------------
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
                   style: const TextStyle(color: Colors.white),
-                  decoration: _inputDecoration("Password"),
+                  decoration: _inputDecoration("รหัสผ่าน"),
                   validator: (v) =>
-                      v!.length < 6 ? "Password too short" : null,
+                      v!.length < 6 ? "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" : null,
                 ),
                 const SizedBox(height: 16),
 
                 // -------------------------
-                // GENDER SELECTOR
+                // GENDER SELECTOR (ภาษาไทย)
                 // -------------------------
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text("Gender",
+                  child: Text("เพศ",
                       style: TextStyle(color: Colors.white70)),
                 ),
                 const SizedBox(height: 8),
 
                 Row(
                   children: [
-                    _genderButton("Male", Icons.male),
+                    // 'ชาย' สำหรับแสดงผล, 'Male' สำหรับส่ง DB
+                    _genderButton("ชาย", Icons.male, "Male"), 
                     const SizedBox(width: 12),
-                    _genderButton("Female", Icons.female),
+                    // 'หญิง' สำหรับแสดงผล, 'Female' สำหรับส่ง DB
+                    _genderButton("หญิง", Icons.female, "Female"), 
                   ],
                 ),
 
                 const SizedBox(height: 40),
 
                 // -------------------------
-                // REGISTER BUTTON
+                // REGISTER BUTTON (ภาษาไทย)
                 // -------------------------
                 SizedBox(
                   width: double.infinity,
@@ -213,7 +237,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           borderRadius: BorderRadius.circular(30)),
                     ),
                     child: const Text(
-                      "Register",
+                      "ลงทะเบียน",
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
@@ -222,7 +246,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
 
                 // -------------------------
-                // LOGIN LINK
+                // LOGIN LINK (ภาษาไทย)
                 // -------------------------
                 TextButton(
                   onPressed: () {
@@ -233,7 +257,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
                   },
                   child: const Text(
-                    "Already have an account? Login",
+                    "มีบัญชีอยู่แล้ว? เข้าสู่ระบบ",
                     style: TextStyle(color: Colors.orange),
                   ),
                 )
@@ -245,15 +269,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+
   // -------------------------
-  // Gender button widget
+  // Gender button widget (รับค่า 2 ค่า: UI และ DB)
   // -------------------------
-  Widget _genderButton(String gender, IconData icon) {
-    final bool selected = _selectedGender == gender;
+  Widget _genderButton(String displayGender, IconData icon, String dbValue) {
+    final bool selected = _selectedGender == dbValue;
 
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedGender = gender),
+        // เมื่อคลิก จะเก็บค่า dbValue ("Male" หรือ "Female") เข้า _selectedGender
+        onTap: () => setState(() => _selectedGender = dbValue),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
@@ -268,7 +294,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               Icon(icon, color: Colors.white),
               const SizedBox(height: 4),
-              Text(gender, style: const TextStyle(color: Colors.white)),
+              // แสดงข้อความภาษาไทย
+              Text(displayGender, style: const TextStyle(color: Colors.white)),
             ],
           ),
         ),
@@ -276,8 +303,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+
   // -------------------------
-  // Input decoration
+  // Input decoration (แสดง hint เป็นภาษาไทย)
   // -------------------------
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(

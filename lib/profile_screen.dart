@@ -53,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _profileImage = widget.profile_image;
   }
 
-  // ✅ ฟังก์ชันส่งข้อมูลกลับไปหน้า Home (เพื่อให้ Home อัปเดตทันที)
+  // ✅ ฟังก์ชันส่งข้อมูลกลับไปหน้า Home (Key ยังคงเป็นภาษาอังกฤษเพื่อให้ตรงกับ DB)
   void _goBackWithData() {
     final updatedData = {
       "id": widget.userId,
@@ -110,7 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text("Contact Support", style: TextStyle(color: Colors.white)),
+        title: const Text("ติดต่อฝ่ายสนับสนุน", style: TextStyle(color: Colors.white)),
         content: const Text(
           "หากพบปัญหาการใช้งาน ติดต่อเราได้ที่:\nsupport@fitnessapp.com\nโทร: 02-123-4567",
           style: TextStyle(color: Colors.white70),
@@ -118,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("OK", style: TextStyle(color: Colors.redAccent)),
+            child: const Text("ตกลง", style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -133,7 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final safeName = _safeString(_name, "User");
+    final safeName = _safeString(_name, "ผู้ใช้งาน");
     final avatarLetter = (safeName.trim().isNotEmpty) ? safeName.trim()[0].toUpperCase() : "U";
 
     // ✅ ใช้ PopScope เพื่อดักจับการกดปุ่ม Back ของเครื่อง
@@ -152,12 +152,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: _goBackWithData,
           ),
-          title: const Text("Profile", style: TextStyle(color: Colors.white)),
+          title: const Text("โปรไฟล์", style: TextStyle(color: Colors.white)),
           actions: [
             // 🎧 ปุ่ม Support มุมขวาบน
             IconButton(
               icon: const Icon(Icons.support_agent, color: Colors.white),
-              tooltip: "Contact Support",
+              tooltip: "ติดต่อฝ่ายสนับสนุน",
               onPressed: _contactSupport,
             )
           ],
@@ -173,8 +173,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       radius: 50,
                       backgroundColor: Colors.grey[800],
                       backgroundImage: NetworkImage(
-                        // ใส่ Timestamp เพื่อแก้ Cache รูป
-                        "http://10.19.205.169/flutter_api/uploads/profile/$_profileImage?v=${DateTime.now().millisecondsSinceEpoch}",
+                        // URL เดิม ไม่เปลี่ยนแปลง เพื่อให้ดึงรูปได้เหมือนเดิม
+                        "http://10.0.2.2/flutter_api/uploads/profile/$_profileImage?v=${DateTime.now().millisecondsSinceEpoch}",
                       ),
                     )
                   : CircleAvatar(
@@ -185,36 +185,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const SizedBox(height: 10),
 
-              // ✏️ ปุ่ม Edit Profile (ตรงกลาง)
+              // ✏️ ปุ่ม Edit Profile (ตรงกลาง) -> เปลี่ยนเป็นภาษาไทย
               TextButton(
                 onPressed: _openEditProfile,
                 child: const Text(
-                  "Edit Profile",
+                  "แก้ไขข้อมูลส่วนตัว",
                   style: TextStyle(color: Colors.redAccent, fontSize: 16),
                 ),
               ),
 
               const SizedBox(height: 20),
 
-              // ข้อมูลผู้ใช้
-              _infoRow("Name", safeName),
-              _infoRow("Email", _safeString(_email)),
-              _infoRow("Gender", _safeString(_gender)),
-              _infoRow("Age", _age.toString()),
-              _infoRow("Weight", "$_weight kg"),
-              _infoRow("Height", "$_height cm"),
+              // ข้อมูลผู้ใช้ (Label ภาษาไทย, ค่า Value จาก DB)
+              _infoRow("ชื่อ", safeName),
+              _infoRow("อีเมล", _safeString(_email)),
+              _infoRow("เพศ", _safeString(_gender)), // ถ้า DB เก็บ Male/Female ก็จะโชว์ตามนั้น
+              _infoRow("อายุ", "$_age ปี"),
+              _infoRow("น้ำหนัก", "$_weight กก."),
+              _infoRow("ส่วนสูง", "$_height ซม."),
               _infoRow("BMI", _bmi.toStringAsFixed(1)),
 
               const Spacer(),
 
-              // 🔢 แสดงเวอร์ชัน v.0.0.01
+              // 🔢 แสดงเวอร์ชัน
               const Text(
-                "v.0.0.01",
+                "เวอร์ชัน 0.0.01",
                 style: TextStyle(color: Colors.white30, fontSize: 12),
               ),
               const SizedBox(height: 10),
 
-              // ปุ่ม Sign Out
+              // ปุ่ม Sign Out -> ภาษาไทย
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -230,7 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       (route) => false,
                     );
                   },
-                  child: const Text("Sign Out", style: TextStyle(color: Colors.white, fontSize: 18)),
+                  child: const Text("ออกจากระบบ", style: TextStyle(color: Colors.white, fontSize: 18)),
                 ),
               )
             ],
@@ -248,7 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(title, style: const TextStyle(color: Colors.white60, fontSize: 16)),
           Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
-        ],
+        ],    
       ),
     );
   }

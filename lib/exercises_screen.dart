@@ -15,7 +15,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
   bool loading = true;
 
   // ✅ IP Address เครื่องคอมพิวเตอร์ของคุณ
-  final String _baseUrl = "http://10.19.205.169"; 
+  final String _baseUrl = "http://10.0.2.2"; 
   final String _apiFolder = "fitness_exercises_api"; 
 
   @override
@@ -59,9 +59,9 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     if (url.startsWith("http")) {
       // ✅ เพิ่มการเช็ค "10.0.2.2" ด้วย เพื่อแก้ให้เป็น IP จริง
       if (url.contains("localhost") || url.contains("127.0.0.1") || url.contains("10.0.2.2")) {
-        finalUrl = url.replaceAll("localhost", "10.19.205.169")
-                      .replaceAll("127.0.0.1", "10.19.205.169")
-                      .replaceAll("10.0.2.2", "10.19.205.169"); // <-- แก้ตรงนี้
+        finalUrl = url.replaceAll("localhost", "10.0.2.2")
+                      .replaceAll("127.0.0.1", "10.0.2.2")
+                      .replaceAll("10.0.2.2", "10.0.2.2"); // <-- แก้ตรงนี้
       }
     } else {
       // กรณีที่ 2: ถ้าเก็บแค่ชื่อไฟล์

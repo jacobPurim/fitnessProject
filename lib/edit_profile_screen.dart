@@ -80,7 +80,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      var uri = Uri.parse("http://10.19.205.169/flutter_api/update_profile.php");
+      var uri = Uri.parse("http://10.0.2.2/flutter_api/update_profile.php");
       var request = http.MultipartRequest("POST", uri);
 
       request.fields['user_id'] = widget.userData['id'].toString();
@@ -168,7 +168,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       backgroundImage: _pickedImage != null
                           ? FileImage(_pickedImage!) as ImageProvider
                           : (oldImage.isNotEmpty
-                              ? NetworkImage("http://10.19.205.169/flutter_api/uploads/profile/$oldImage")
+                              ? NetworkImage("http://10.0.2.2/flutter_api/uploads/profile/$oldImage")
                               : null),
                       child: (_pickedImage == null && oldImage.isEmpty)
                           ? const Icon(Icons.person, size: 60, color: Colors.white54)
