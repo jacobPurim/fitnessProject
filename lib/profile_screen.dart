@@ -112,13 +112,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.grey[900],
         title: const Text("ติดต่อฝ่ายสนับสนุน", style: TextStyle(color: Colors.white)),
         content: const Text(
-          "หากพบปัญหาการใช้งาน ติดต่อเราได้ที่:\nsupport@fitnessapp.com\nโทร: 02-123-4567",
+          "หากพบปัญหาการใช้งาน ติดต่อเราได้ที่:\purim.prom@bumail.net\nโทร: 061-8980412",
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("ตกลง", style: TextStyle(color: Colors.redAccent)),
+            child: const Text("ตกลง", style: TextStyle(color: Color.fromARGB(255, 234, 101, 12))),
           ),
         ],
       ),
@@ -174,12 +174,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       backgroundColor: Colors.grey[800],
                       backgroundImage: NetworkImage(
                         // URL เดิม ไม่เปลี่ยนแปลง เพื่อให้ดึงรูปได้เหมือนเดิม
-                        "http://10.0.2.2/flutter_api/uploads/profile/$_profileImage?v=${DateTime.now().millisecondsSinceEpoch}",
+                        "https://dermal-hae-unsteadfastly.ngrok-free.dev/flutter_api/uploads/profile/$_profileImage?v=${DateTime.now().millisecondsSinceEpoch}",
                       ),
                     )
                   : CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: const Color.fromARGB(255, 234, 101, 12),
                       child: Text(avatarLetter, style: const TextStyle(color: Colors.white, fontSize: 40)),
                     ),
 
@@ -219,7 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: const Color.fromARGB(255, 234, 101, 12),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),

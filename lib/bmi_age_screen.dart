@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'bmi_weight_screen.dart'; // ตรวจสอบว่ามีไฟล์นี้อยู่ในโปรเจกต์ของคุณ
+import 'bmi_weight_screen.dart'; 
+// import 'register_screen.dart'; // อาจต้องใช้ถ้าต้องการ pushReplacement กลับไป
 
 class BmiAgeScreen extends StatefulWidget {
   final String userId;
@@ -7,7 +8,7 @@ class BmiAgeScreen extends StatefulWidget {
   final String email;
   final String gender;
   final String password;
-  final String profile_image; // ตัวแปรรับค่า
+  final String profile_image; 
 
   const BmiAgeScreen({
     super.key,
@@ -16,7 +17,7 @@ class BmiAgeScreen extends StatefulWidget {
     required this.email,
     required this.gender,
     required this.password,
-    required this.profile_image, // ใน constructor
+    required this.profile_image, 
   });
 
   @override
@@ -32,8 +33,14 @@ class _BmiAgeScreenState extends State<BmiAgeScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: const BackButton(color: Colors.white),
-        elevation: 0, // ลบเงาของ AppBar
+        elevation: 0,
+        // Back Button: ใช้ pop เพื่อกลับไปหน้า RegisterScreen และคงข้อมูลที่กรอกไว้
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context); 
+          },
+        ),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -49,7 +56,7 @@ class _BmiAgeScreenState extends State<BmiAgeScreen> {
 
           // 2. แสดงตัวเลขปัจจุบัน (แสดงหน่วย "ปี" ไว้)
           Text(
-            "$age ปี", // <-- **คงหน่วย " ปี" ไว้ตามต้องการ**
+            "$age ปี", 
             style: const TextStyle(
               color: Colors.white,
               fontSize: 80, 
@@ -76,7 +83,7 @@ class _BmiAgeScreenState extends State<BmiAgeScreen> {
                       final isSelected = currentAge == age;
                       return Center(
                         child: Text(
-                          "$currentAge", // <-- **ลบหน่วย " ปี" ออกตามต้องการ**
+                          "$currentAge", // ลบหน่วย "ปี" ออก
                           style: TextStyle(
                             color: isSelected ? Colors.orange : Colors.white70,
                             fontSize: isSelected ? 36 : 24, 
@@ -92,7 +99,7 @@ class _BmiAgeScreenState extends State<BmiAgeScreen> {
             ),
           ),
           
-          // 4. ปุ่ม Continue ภาษาไทย (ไม่มีการเปลี่ยนแปลง)
+          // 4. ปุ่ม Continue ภาษาไทย 
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: ElevatedButton(
@@ -106,8 +113,8 @@ class _BmiAgeScreenState extends State<BmiAgeScreen> {
                       email: widget.email,
                       gender: widget.gender,
                       password: widget.password,
-                      age: age, // ส่งค่า age
-                      profile_image: widget.profile_image, // ส่งต่อ profile_image
+                      age: age, 
+                      profile_image: widget.profile_image, 
                     ),
                   ),
                 );

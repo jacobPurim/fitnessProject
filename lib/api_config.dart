@@ -1,8 +1,8 @@
 class ApiConfig {
   // ⚠️ แก้ไข IP Address ตรงนี้ที่เดียว!
-  // - มือถือจริง: ใช้ IP เครื่องคอม (เช่น 10.0.2.2)
-  // - Emulator: ใช้ 10.0.2.2 (หรือ IP เครื่องคอมก็ได้ ถ้ามันมองเห็น)
-  static const String baseUrl = "http://10.0.2.2"; 
+  // - มือถือจริง: ใช้ IP เครื่องคอม (เช่น http://https://dermal-hae-unsteadfastly.ngrok-free.app)
+  // - Emulator: ใช้ http://https://dermal-hae-unsteadfastly.ngrok-free.app (หรือ IP เครื่องคอมก็ได้ ถ้ามันมองเห็น)
+  static const String baseUrl = "https://dermal-hae-unsteadfastly.ngrok-free.dev"; 
   
   // ชื่อโฟลเดอร์ API ของคุณ
   static const String apiFolder = "flutter_api";

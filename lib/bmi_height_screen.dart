@@ -38,7 +38,7 @@ class _BmiHeightScreenState extends State<BmiHeightScreen> {
     setState(() => _isLoading = true);
 
     try {
-      var uri = Uri.parse("http://10.0.2.2/flutter_api/update_bmi_data.php");
+      var uri = Uri.parse("https://dermal-hae-unsteadfastly.ngrok-free.dev/flutter_api/update_bmi_data.php");
       var response = await http.post(uri, body: {
         'user_id': widget.userId,
         'age': widget.age.toString(),

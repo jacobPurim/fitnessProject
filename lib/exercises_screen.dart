@@ -15,7 +15,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
   bool loading = true;
 
   // ✅ IP Address เครื่องคอมพิวเตอร์ของคุณ
-  final String _baseUrl = "http://10.0.2.2"; 
+  final String _baseUrl = "https://dermal-hae-unsteadfastly.ngrok-free.dev"; 
   final String _apiFolder = "fitness_exercises_api"; 
 
   @override
@@ -49,19 +49,17 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     }
   }
 
-  // 🔹 ฟังก์ชันแก้ URL รูปภาพ (ฉลาดขึ้นกว่าเดิม!)
+  // 🔹 ฟังก์ชันแก้ URL รูปภาพ
   String _fixImageUrl(String? url) {
     if (url == null || url.isEmpty) return "";
     
     String finalUrl = url;
 
-    // กรณีที่ 1: ถ้าใน DB เก็บเป็น URL เต็มๆ (http://...)
+    // กรณีที่ 1: ถ้าใน DB เก็บเป็น URL เต็มๆ
     if (url.startsWith("http")) {
-      // ✅ เพิ่มการเช็ค "10.0.2.2" ด้วย เพื่อแก้ให้เป็น IP จริง
-      if (url.contains("localhost") || url.contains("127.0.0.1") || url.contains("10.0.2.2")) {
-        finalUrl = url.replaceAll("localhost", "10.0.2.2")
-                      .replaceAll("127.0.0.1", "10.0.2.2")
-                      .replaceAll("10.0.2.2", "10.0.2.2"); // <-- แก้ตรงนี้
+      if (url.contains("localhost") || url.contains("127.0.0.1") || url.contains("https://dermal-hae-unsteadfastly.ngrok-free.dev")) {
+        finalUrl = url.replaceAll("localhost", "https://dermal-hae-unsteadfastly.ngrok-free.dev")
+                      .replaceAll("127.0.0.1", "https://dermal-hae-unsteadfastly.ngrok-free.dev");
       }
     } else {
       // กรณีที่ 2: ถ้าเก็บแค่ชื่อไฟล์
@@ -72,7 +70,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
       }
     }
 
-    // แก้ปัญหาชื่อไฟล์มีเว้นวรรค (เช่น "Bench Press.jpg")
+    // แก้ปัญหาชื่อไฟล์มีเว้นวรรค
     final parts = finalUrl.split('/');
     final lastPart = parts.last;
     final encodedLastPart = Uri.encodeComponent(lastPart); 
@@ -81,6 +79,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     return finalUrl;
   }
 
+  // ⚠️ ตรงนี้ยังคงใช้ Keyword ภาษาอังกฤษ เพราะต้องตรงกับข้อมูลใน Database
   List _filterByCategory(String keyword) {
     return exercises.where((ex) {
       final category = ex['category']?.toString().toLowerCase() ?? "";
@@ -96,7 +95,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
         backgroundColor: Colors.black,
         appBar: AppBar(
           title: const Text(
-            "WORKOUT LIBRARY",
+            "คลังท่าออกกำลังกาย", // 🇹🇭 เปลี่ยนภาษาไทย
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w900, 
@@ -109,15 +108,16 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           elevation: 0,
           leading: const BackButton(color: Colors.white),
           bottom: const TabBar(
-            labelColor: Colors.redAccent,
+            labelColor: Color.fromARGB(255, 234, 101, 12),
             unselectedLabelColor: Colors.white38,
-            indicatorColor: Colors.redAccent,
+            indicatorColor: Color.fromARGB(255, 234, 101, 12),
             indicatorWeight: 3,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14), // เพิ่มขนาดตัวอักษรนิดหน่อยให้อ่านง่าย
             tabs: [
-              Tab(text: "PUSH", icon: Icon(Icons.fitness_center)),
-              Tab(text: "PULL", icon: Icon(Icons.rowing)),
-              Tab(text: "LEGS", icon: Icon(Icons.directions_run)),
+              // 🇹🇭 เปลี่ยน Label เป็นภาษาไทย แต่ยังคงความหมายเดิม
+              Tab(text: "Push (ผลัก)", icon: Icon(Icons.fitness_center)),
+              Tab(text: "Pull (ดึง)", icon: Icon(Icons.rowing)),
+              Tab(text: "Legs (ขา)", icon: Icon(Icons.directions_run)),
             ],
           ),
         ),
@@ -125,6 +125,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
             ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
             : TabBarView(
                 children: [
+                  // ⚠️ ส่ง Keyword ภาษาอังกฤษไปกรองเหมือนเดิม
                   _buildExerciseGrid(_filterByCategory("Push")),
                   _buildExerciseGrid(_filterByCategory("Pull")),
                   _buildExerciseGrid(_filterByCategory("Leg")),
@@ -142,7 +143,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           children: [
             Icon(Icons.fitness_center, size: 64, color: Colors.white12),
             SizedBox(height: 16),
-            Text("No exercises yet", style: TextStyle(color: Colors.white30)),
+            Text("ไม่พบท่าออกกำลังกาย", style: TextStyle(color: Colors.white30, fontSize: 16)), // 🇹🇭
           ],
         ),
       );
@@ -165,10 +166,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
   }
 
   Widget _buildModernCard(dynamic ex) {
-    // ✅ เรียกใช้ฟังก์ชันแก้ URL
     final String imageUrl = _fixImageUrl(ex["image_url"]);
-    
-    // เช็คว่ามีวิดีโอไหม
     final bool hasVideo = ex["video_url"] != null && ex["video_url"].toString().isNotEmpty;
 
     return GestureDetector(
@@ -185,7 +183,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("No video available for this exercise")),
+            const SnackBar(content: Text("ไม่มีวิดีโอสำหรับท่านี้")), // 🇹🇭
           );
         }
       },
@@ -225,7 +223,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                       children: [
                         Icon(Icons.broken_image, color: Colors.white24),
                         SizedBox(height: 4),
-                        Text("No Image", style: TextStyle(color: Colors.white24, fontSize: 10)),
+                        Text("ไม่มีรูปภาพ", style: TextStyle(color: Colors.white24, fontSize: 12)), // 🇹🇭
                       ],
                     ),
                   );
@@ -255,7 +253,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      ex["name"] ?? "Unknown",
+                      ex["name"] ?? "ไม่ระบุชื่อ", // 🇹🇭 Fallback text
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -273,7 +271,9 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        ex["sets"] ?? "3 sets",
+                        // ถ้า Database ส่งมาเป็นตัวเลขหรือ null จะแสดง "3 เซ็ต"
+                        // แต่ถ้า Database ส่งมาเป็น String "4 sets" ก็จะแสดงตามนั้น (แก้ไม่ได้ถ้าไม่แก้ DB)
+                        ex["sets"] ?? "เเนะนำ 3 เซ็ต 12 ครั้ง", 
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,

@@ -60,7 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     
     // URL สำหรับ API (ต้องใช้ IP address ของเครื่องคอมพิวเตอร์จริง)
-    var uri = Uri.parse("http://10.0.2.2/flutter_api/register.php"); 
+    var uri = Uri.parse("https://dermal-hae-unsteadfastly.ngrok-free.dev/flutter_api/register.php"); 
     var request = http.MultipartRequest("POST", uri);
 
     // 3. ส่งข้อมูลเป็นภาษาอังกฤษตามเดิม: name, email, password, gender

@@ -211,11 +211,11 @@ class _BmiScreenState extends State<BmiScreen> {
             data: SliderTheme.of(context).copyWith(
               trackHeight: 8.0,
               trackShape: const RoundedRectSliderTrackShape(),
-              activeTrackColor: Colors.redAccent,
+              activeTrackColor: const Color.fromARGB(255, 234, 101, 12),
               inactiveTrackColor: Colors.grey[700],
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12.0),
-              thumbColor: Colors.redAccent,
-              overlayColor: Colors.redAccent.withAlpha(32),
+              thumbColor: const Color.fromARGB(255, 234, 101, 12),
+              overlayColor: const Color.fromARGB(255, 234, 101, 12).withAlpha(32),
               overlayShape: const RoundSliderOverlayShape(overlayRadius: 24.0),
             ),
             child: Slider(

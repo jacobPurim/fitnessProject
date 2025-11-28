@@ -32,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://10.0.2.2/flutter_api/login.php"),
+        Uri.parse("https://dermal-hae-unsteadfastly.ngrok-free.dev/flutter_api/login.php"),
         body: {
           "email": _email.text.trim(),
           "password": _password.text.trim(),

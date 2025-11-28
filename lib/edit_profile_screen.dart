@@ -80,7 +80,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      var uri = Uri.parse("http://10.0.2.2/flutter_api/update_profile.php");
+      var uri = Uri.parse("https://dermal-hae-unsteadfastly.ngrok-free.dev/flutter_api/update_profile.php");
       var request = http.MultipartRequest("POST", uri);
 
       request.fields['user_id'] = widget.userData['id'].toString();
@@ -138,7 +138,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+      SnackBar(content: Text(msg), backgroundColor: const Color.fromARGB(255, 234, 101, 12)),
     );
   }
 
@@ -168,7 +168,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       backgroundImage: _pickedImage != null
                           ? FileImage(_pickedImage!) as ImageProvider
                           : (oldImage.isNotEmpty
-                              ? NetworkImage("http://10.0.2.2/flutter_api/uploads/profile/$oldImage")
+                              ? NetworkImage("https://dermal-hae-unsteadfastly.ngrok-free.dev/flutter_api/uploads/profile/$oldImage")
                               : null),
                       child: (_pickedImage == null && oldImage.isEmpty)
                           ? const Icon(Icons.person, size: 60, color: Colors.white54)
@@ -183,7 +183,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: const BoxDecoration(
-                            color: Colors.redAccent,
+                            color: Color.fromARGB(255, 234, 101, 12),
                             shape: BoxShape.circle,
                           ),
                           child: _isPickingImage 
@@ -231,7 +231,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: const Color.fromARGB(255, 234, 101, 12),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -272,9 +272,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.redAccent : Colors.grey[900],
+            color: isSelected ? const Color.fromARGB(255, 234, 101, 12) : Colors.grey[900],
             borderRadius: BorderRadius.circular(12),
-            border: isSelected ? Border.all(color: Colors.red, width: 2) : null,
+            border: isSelected ? Border.all(color: const Color.fromARGB(255, 234, 101, 12), width: 2) : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

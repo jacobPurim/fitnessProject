@@ -76,103 +76,116 @@ class BmiResultScreen extends StatelessWidget {
         leading: const BackButton(color: Colors.white),
         elevation: 0,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // 1. หัวข้อภาษาไทย
-            const Text(
-              "ผลการคำนวณ BMI", 
-              style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)
-            ),
-            const SizedBox(height: 10),
-
-            // 2. แสดงค่า BMI พร้อมหน่วย
-            Text(
-              "${bmi.toStringAsFixed(1)} BMI", 
-              style: const TextStyle(fontSize: 80, color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-
-            // 3. สถานะ BMI
-            Text(
-              status, 
-              style: TextStyle(color: color, fontSize: 32, fontWeight: FontWeight.bold)
-            ),
-            
-            const SizedBox(height: 40),
-
-            // 4. คำอธิบายและน้ำหนักที่แนะนำ
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30.0),
-              child: Column(
-                children: [
-                  const Text(
-                    "ตามข้อมูลของคุณ:", 
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 18)
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    "ความสูง $height ซม. และน้ำหนัก $weight กก.", 
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "ช่วงน้ำหนักที่แนะนำ (BMI 18.5 - 24.9):", 
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 18)
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    recommendedWeight, 
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.orangeAccent, fontSize: 24, fontWeight: FontWeight.bold)
-                  ),
-                ],
+      // **การแก้ไข: ใช้ SingleChildScrollView ครอบ Padding และ Column**
+      body: SingleChildScrollView(
+        // Padding รอบนอก
+        padding: const EdgeInsets.symmetric(vertical: 20.0),
+        child: Center( // ใช้ Center เพื่อจัด Column ให้อยู่กลางจอ (แนวนอน)
+          child: Column(
+            // **MainAxisAlignment.center** เพื่อจัดให้เนื้อหาอยู่ตรงกลาง (แนวตั้ง) 
+            // เมื่อเนื้อหาไม่ล้นจอ
+            mainAxisAlignment: MainAxisAlignment.center,
+            // **CrossAxisAlignment.center** เพื่อจัดเนื้อหาทั้งหมดให้อยู่ตรงกลาง (แนวนอน)
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // 1. หัวข้อภาษาไทย
+              const Text(
+                "ผลการคำนวณ BMI", 
+                textAlign: TextAlign.center, // จัดข้อความให้อยู่กลาง (แนวนอน)
+                style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)
               ),
-            ),
-            
-            const SizedBox(height: 50),
+              const SizedBox(height: 10),
 
-            // 5. ปุ่มดำเนินการต่อ (กลับไป HomeScreen)
-            SizedBox(
-              width: 260,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => HomeScreen(
-                        userData: {
-                          "id": userId,
-                          "name": name,
-                          "email": email,
-                          "gender": gender,
-                          "age": age,
-                          "weight": weight,
-                          "height": height,
-                          "bmi": bmi,
-                          "profile_image": profile_image,
-                        },
-                      ),
+              // 2. แสดงค่า BMI พร้อมหน่วย
+              Text(
+                "${bmi.toStringAsFixed(1)} BMI", 
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 80, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+
+              // 3. สถานะ BMI
+              Text(
+                status, 
+                textAlign: TextAlign.center,
+                style: TextStyle(color: color, fontSize: 32, fontWeight: FontWeight.bold)
+              ),
+              
+              const SizedBox(height: 30),
+
+              // 4. คำอธิบายและน้ำหนักที่แนะนำ
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                child: Column(
+                  children: [
+                    const Text(
+                      "ตามข้อมูลของคุณ:", 
+                      textAlign: TextAlign.center, // จัดข้อความให้อยู่กลาง
+                      style: TextStyle(color: Colors.white70, fontSize: 18)
                     ),
-                    (route) => false,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent, 
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                ),
-                child: const Text(
-                  "ดำเนินการต่อ", 
-                  style: TextStyle(color: Colors.white, fontSize: 20)
+                    const SizedBox(height: 5),
+                    Text(
+                      "ความสูง $height ซม. และน้ำหนัก $weight กก.", 
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "ช่วงน้ำหนักที่แนะนำ (BMI 18.5 - 24.9):", 
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 18)
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      recommendedWeight, 
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.orangeAccent, fontSize: 24, fontWeight: FontWeight.bold)
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+              
+              const SizedBox(height: 40),
+
+              // 5. ปุ่มดำเนินการต่อ (กลับไป HomeScreen)
+              SizedBox(
+                width: 260,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => HomeScreen(
+                          userData: {
+                            "id": userId,
+                            "name": name,
+                            "email": email,
+                            "gender": gender,
+                            "password": password,
+                            "age": age,
+                            "weight": weight,
+                            "height": height,
+                            "bmi": bmi,
+                            "profile_image": profile_image,
+                          },
+                        ),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent, 
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                  child: const Text(
+                    "ดำเนินการต่อ", 
+                    style: TextStyle(color: Colors.white, fontSize: 20)
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20), // ช่องว่างปิดท้าย
+            ],
+          ),
         ),
       ),
     );
