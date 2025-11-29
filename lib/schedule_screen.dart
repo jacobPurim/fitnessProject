@@ -268,8 +268,9 @@ class _ScheduleScreenState extends State<ScheduleScreen>
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: const Color.fromARGB(255, 234, 101, 12),
         onPressed: saveSchedule,
-        icon: const Icon(Icons.save),
-        label: const Text("บันทึก"),
+        // ✅ เปลี่ยน icon ให้เป็นสีขาว
+        icon: const Icon(Icons.save, color: Colors.white), 
+        label: const Text("บันทึก", style: TextStyle(color: Colors.white)), // เพิ่มสีข้อความให้ชัดเจน
       ),
       body: Column(
         children: [

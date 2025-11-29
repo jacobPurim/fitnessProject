@@ -192,47 +192,104 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+  
+  // ✅ ฟังก์ชันช่วยแปลงชื่อท่าในตารางฝึกเป็นคีย์เวิร์ดกรอง
+  String _getFilterKeyword(String exerciseName) {
+    final lowerName = exerciseName.toLowerCase();
+    // ตรวจสอบจากชื่ออังกฤษหรือชื่อไทย/กลุ่มกล้ามเนื้อ
+    if (lowerName.contains("pushday") || lowerName.contains("ผลัก") || lowerName.contains("อก") || lowerName.contains("ไหล่") || lowerName.contains("หน้าแขน")) {
+      return "Push";
+    }
+    if (lowerName.contains("pullday") || lowerName.contains("ดึง") || lowerName.contains("หลัง") || lowerName.contains("หลังแขน")) {
+      return "Pull";
+    }
+    if (lowerName.contains("legday") || lowerName.contains("ขา") || lowerName.contains("ท้อง")) {
+      return "Leg";
+    }
+    return ""; // สำหรับ Cardio หรืออื่น ๆ ที่ไม่เข้าพวก
+  }
 
+  // ✅ ปรับปรุง _scheduleCard ให้แตะได้
   Widget _scheduleCard(Map<String, dynamic> ex) {
     final imgUrl = _getExerciseImageUrl(_safeString(ex['image_url'])); 
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_safeString(ex['name']), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Text(_safeString(ex['type']), style: const TextStyle(color: Colors.white70)),
-                ],
+    final exName = _safeString(ex['name']);
+    final filterKeyword = _getFilterKeyword(exName);
+    
+    return GestureDetector( // ✅ เพิ่ม GestureDetector
+      onTap: () {
+        // หากมีคีย์เวิร์ดที่ใช้กรองได้ ให้ไปที่ ExercisesScreen พร้อม Filter
+        if (filterKeyword.isNotEmpty) {
+           Navigator.push(
+             context,
+             MaterialPageRoute(
+               // ✅ ส่ง filterKeyword ไปยัง ExercisesScreen
+               builder: (_) => ExercisesScreen(initialFilter: filterKeyword),
+             ),
+           );
+        } else {
+          // แจ้งเตือนถ้าไม่มีหมวดที่ชัดเจน
+          ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text("ไม่มีหมวดออกกำลังกายที่ชัดเจนสำหรับ: $exName")),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(16),
+          // เพิ่ม border เล็กน้อยเพื่อบ่งบอกว่าแตะได้
+          border: Border.all(
+            color: filterKeyword.isNotEmpty ? const Color.fromARGB(255, 234, 101, 12).withOpacity(0.5) : Colors.transparent, 
+            width: 1
+          ), 
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(exName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    Text(
+                      _safeString(ex['type']), 
+                      style: const TextStyle(color: Colors.white70)
+                    ),
+                    // ✅ แสดงปุ่มเล็กๆ หากสามารถคลิกได้
+                    if (filterKeyword.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 234, 101, 12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text("ดูท่าบริหาร", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      )
+                  ],
+                ),
               ),
             ),
-          ),
-          ClipRRect(
-            borderRadius: const BorderRadius.only(topRight: Radius.circular(16), bottomRight: Radius.circular(16)),
-            child: Image.network(
-              imgUrl,
-              width: 120,
-              height: 120,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 120, height: 120, color: Colors.grey[800],
-                  child: const Icon(Icons.fitness_center, color: Colors.white24),
-                );
-              },
+            ClipRRect(
+              borderRadius: const BorderRadius.only(topRight: Radius.circular(16), bottomRight: Radius.circular(16)),
+              child: Image.network(
+                imgUrl,
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 120, height: 120, color: Colors.grey[800],
+                    child: const Icon(Icons.fitness_center, color: Colors.white24),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -305,6 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _menu(Icons.access_time, "ตารางฝึก", openSchedule),
+                  // ✅ เปลี่ยนให้เรียก ExercisesScreen แบบไม่มี filter เมื่อกดปุ่ม "ท่าบริหาร"
                   _menu(Icons.fitness_center, "ท่าบริหาร", () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const ExercisesScreen()));
                   }),

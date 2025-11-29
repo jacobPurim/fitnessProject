@@ -4,7 +4,11 @@ import 'dart:convert';
 import 'exercise_video_screen.dart';
 
 class ExercisesScreen extends StatefulWidget {
-  const ExercisesScreen({super.key});
+  // ✅ เพิ่มตัวแปรสำหรับรับค่าคีย์เวิร์ดที่จะใช้กรอง
+  final String? initialFilter;
+
+  // ✅ ปรับ Constructor
+  const ExercisesScreen({super.key, this.initialFilter});
 
   @override
   State<ExercisesScreen> createState() => _ExercisesScreenState();
@@ -57,7 +61,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
 
     // กรณีที่ 1: ถ้าใน DB เก็บเป็น URL เต็มๆ
     if (url.startsWith("http")) {
-      if (url.contains("localhost") || url.contains("127.0.0.1") || url.contains("https://dermal-hae-unsteadfastly.ngrok-free.dev")) {
+      if (url.contains("localhost") || url.contains("127.0.0.1") || finalUrl.contains("https://dermal-hae-unsteadfastly.ngrok-free.dev")) {
         finalUrl = url.replaceAll("localhost", "https://dermal-hae-unsteadfastly.ngrok-free.dev")
                       .replaceAll("127.0.0.1", "https://dermal-hae-unsteadfastly.ngrok-free.dev");
       }
@@ -86,11 +90,32 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
       return category.contains(keyword.toLowerCase());
     }).toList();
   }
+  
+  // ✅ ฟังก์ชันช่วยในการหา Tab Index จาก Keyword
+  int _getTabIndexForFilter(String? filter) {
+    final lowerFilter = filter?.toLowerCase();
+    switch (lowerFilter) {
+      case 'push':
+        return 0;
+      case 'pull':
+        return 1;
+      case 'leg':
+      case 'legs':
+        return 2;
+      default:
+        return 0; 
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    // ✅ กำหนดค่าเริ่มต้นของ Tab ตาม initialFilter
+    final initialIndex = _getTabIndexForFilter(widget.initialFilter);
+    
     return DefaultTabController(
       length: 3,
+      initialIndex: initialIndex, // ✅ ใช้ค่าเริ่มต้นที่ส่งมา
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -112,7 +137,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
             unselectedLabelColor: Colors.white38,
             indicatorColor: Color.fromARGB(255, 234, 101, 12),
             indicatorWeight: 3,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14), // เพิ่มขนาดตัวอักษรนิดหน่อยให้อ่านง่าย
+            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14), 
             tabs: [
               // 🇹🇭 เปลี่ยน Label เป็นภาษาไทย แต่ยังคงความหมายเดิม
               Tab(text: "Push (ผลัก)", icon: Icon(Icons.fitness_center)),
@@ -271,8 +296,6 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        // ถ้า Database ส่งมาเป็นตัวเลขหรือ null จะแสดง "3 เซ็ต"
-                        // แต่ถ้า Database ส่งมาเป็น String "4 sets" ก็จะแสดงตามนั้น (แก้ไม่ได้ถ้าไม่แก้ DB)
                         ex["sets"] ?? "เเนะนำ 3 เซ็ต 12 ครั้ง", 
                         style: const TextStyle(
                           color: Colors.white,

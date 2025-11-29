@@ -184,7 +184,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         MaterialPageRoute(
                           builder: (context) => const HomeScreen(
                             userData: {
-                              'name': 'Guest User',
+                              'name': 'Guest ',
                               'id': '0', // ID สมมติสำหรับ Guest
                               'profile_image': '',
                             },

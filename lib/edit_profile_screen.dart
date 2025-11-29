@@ -25,12 +25,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String _selectedGender = "Male";
   File? _pickedImage;
   bool _isLoading = false;
-  bool _isPickingImage = false; // 1. เพิ่มตัวแปรเช็คสถานะการเลือกรูป
+  bool _isPickingImage = false; 
+  
+  // ✅ เพิ่มตัวแปรเช็คว่าเป็น Guest หรือไม่
+  bool _isGuest = false;
 
   @override
   void initState() {
     super.initState();
     final user = widget.userData;
+    
+    // ตรวจสอบ ID: ถ้าเป็น 0 หรือไม่สามารถแปลงเป็น int ได้ ถือว่าเป็น Guest
+    final userId = int.tryParse(user['id']?.toString() ?? '0') ?? 0;
+    _isGuest = userId == 0;
+    
     _nameController = TextEditingController(text: user['name']);
     _emailController = TextEditingController(text: user['email']);
     _ageController = TextEditingController(text: user['age'].toString());
@@ -49,12 +57,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  // 2. แก้ไขฟังก์ชันเลือกรูปภาพ
+  // 2. แก้ไขฟังก์ชันเลือกรูปภาพ (อนุญาตให้ Guest เลือกรูปได้ แต่จะเซฟไม่ได้)
   Future<void> _pickImage() async {
-    // ถ้ากำลังเลือกรูปอยู่ ให้หยุดทำงานทันที (ป้องกันการกดรัว)
     if (_isPickingImage) return;
 
-    setState(() => _isPickingImage = true); // ล็อกไว้ก่อน
+    setState(() => _isPickingImage = true); 
 
     try {
       final picker = ImagePicker();
@@ -65,9 +72,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     } catch (e) {
       debugPrint("Pick image error: $e");
-      // อาจจะแสดง SnackBar บอกผู้ใช้ถ้าจำเป็น
     } finally {
-      // ปลดล็อกเมื่อทำงานเสร็จ (ไม่ว่าจะสำเร็จหรือ Error)
       if (mounted) {
         setState(() => _isPickingImage = false);
       }
@@ -75,6 +80,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
+    // ✅ 1. ดักจับถ้าเป็น Guest
+    if (_isGuest) {
+      _showError("กรุณาเข้าสู่ระบบเพื่อบันทึกการเปลี่ยนแปลง");
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -146,6 +158,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     String oldImage = widget.userData['profile_image'] ?? "";
 
+    // ✅ ปิดการโต้ตอบของฟิลด์สำหรับ Guest
+    bool fieldsEnabled = !_isGuest;
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -178,7 +193,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       bottom: 0,
                       right: 0,
                       child: GestureDetector(
-                        // 3. เรียกใช้ฟังก์ชันที่แก้ไขแล้ว
+                        // อนุญาตให้ Guest กดได้แต่จะไปเซฟไม่ได้
                         onTap: _isPickingImage ? null : _pickImage, 
                         child: Container(
                           padding: const EdgeInsets.all(8),
@@ -187,13 +202,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: _isPickingImage 
-                             // แสดง loading เล็กๆ ถ้ากำลังเปิด Gallery
-                             ? const SizedBox(
-                                 width: 20, 
-                                 height: 20, 
-                                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                               )
-                             : const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                              ? const SizedBox(
+                                  width: 20, 
+                                  height: 20, 
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                                )
+                              : const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                         ),
                       ),
                     ),
@@ -201,15 +215,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              _buildTextField("Full Name", _nameController),
+              // ✅ ส่ง enabled: fieldsEnabled ไปยัง TextField
+              _buildTextField("Full Name", _nameController, enabled: fieldsEnabled),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildTextField("Age", _ageController, isNumber: true)),
+                  Expanded(child: _buildTextField("Age", _ageController, isNumber: true, enabled: fieldsEnabled)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildTextField("Weight (kg)", _weightController, isNumber: true)),
+                  Expanded(child: _buildTextField("Weight (kg)", _weightController, isNumber: true, enabled: fieldsEnabled)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildTextField("Height (cm)", _heightController, isNumber: true)),
+                  Expanded(child: _buildTextField("Height (cm)", _heightController, isNumber: true, enabled: fieldsEnabled)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -220,24 +235,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  _genderOption("Male", Icons.male),
+                  // ✅ ส่ง isEnabled: fieldsEnabled ไปยัง _genderOption
+                  _genderOption("Male", Icons.male, isEnabled: fieldsEnabled),
                   const SizedBox(width: 16),
-                  _genderOption("Female", Icons.female),
+                  _genderOption("Female", Icons.female, isEnabled: fieldsEnabled),
                 ],
               ),
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveProfile,
+                  // ✅ ปุ่มจะถูกปิดการใช้งานถ้าเป็น Guest หรือกำลังโหลด
+                  onPressed: (_isLoading || _isGuest) ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 234, 101, 12),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    // ✅ ปรับสีถ้าปุ่ม disabled
+                    disabledBackgroundColor: _isGuest ? Colors.grey[700] : null,
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Save Changes", style: TextStyle(color: Colors.white, fontSize: 18)),
+                      : Text(
+                          _isGuest ? "เข้าสู่ระบบเพื่อบันทึก" : "Save Changes", 
+                          style: const TextStyle(color: Colors.white, fontSize: 18)
+                        ),
                 ),
               ),
             ],
@@ -247,41 +269,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+  // ✅ แก้ไข: เพิ่มพารามิเตอร์ enabled
   Widget _buildTextField(String label, TextEditingController controller,
-      {bool isNumber = false, bool isEmail = false}) {
+      {bool isNumber = false, bool isEmail = false, bool enabled = true}) {
     return TextFormField(
       controller: controller,
+      enabled: enabled, // ✅ ใช้ enabled ที่ส่งมา
       style: const TextStyle(color: Colors.white),
       keyboardType: isNumber ? TextInputType.number : (isEmail ? TextInputType.emailAddress : TextInputType.text),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white54),
         filled: true,
-        fillColor: Colors.grey[900],
+        fillColor: enabled ? Colors.grey[900] : Colors.grey[800], // เปลี่ยนสีพื้นหลังเมื่อถูกปิด
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       ),
       validator: (v) => v!.isEmpty ? "Required" : null,
     );
   }
 
-  Widget _genderOption(String gender, IconData icon) {
+  // ✅ แก้ไข: เพิ่มพารามิเตอร์ isEnabled
+  Widget _genderOption(String gender, IconData icon, {bool isEnabled = true}) {
     bool isSelected = _selectedGender == gender;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedGender = gender),
+        // ✅ ปิด onTap ถ้าเป็น Guest
+        onTap: isEnabled ? () => setState(() => _selectedGender = gender) : null,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? const Color.fromARGB(255, 234, 101, 12) : Colors.grey[900],
+            color: isSelected 
+                ? const Color.fromARGB(255, 234, 101, 12) 
+                : (isEnabled ? Colors.grey[900] : Colors.grey[800]), // ปรับสีเมื่อ disabled
             borderRadius: BorderRadius.circular(12),
             border: isSelected ? Border.all(color: const Color.fromARGB(255, 234, 101, 12), width: 2) : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white),
+              Icon(icon, color: isEnabled ? Colors.white : Colors.white38), // ปรับสีไอคอน
               const SizedBox(width: 8),
-              Text(gender, style: const TextStyle(color: Colors.white)),
+              Text(gender, style: TextStyle(color: isEnabled ? Colors.white : Colors.white38)), // ปรับสีข้อความ
             ],
           ),
         ),
