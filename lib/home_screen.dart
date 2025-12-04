@@ -1,7 +1,9 @@
+import 'package:KaitomGym/screen/qna_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+// --- Imports ไฟล์อื่นๆ ---
 import 'profile_screen.dart';
 import 'schedule_screen.dart';
 import 'exercises_screen.dart';
@@ -27,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     "Saturday",
     "Sunday"
   ];
-  
+
   final Map<String, String> dayTranslations = {
     "Monday": "วันจันทร์",
     "Tuesday": "วันอังคาร",
@@ -41,9 +43,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, List<Map<String, dynamic>>> schedule = {};
   Map<String, dynamic>? _currentUser;
 
-  // ✅ ใช้ IP สำหรับ Emulator
+  // ⚠️ อย่าลืมเช็ค URL ngrok ให้เป็นอันล่าสุดของคุณเสมอ
   final String _baseUrl = "https://dermal-hae-unsteadfastly.ngrok-free.dev";
-  final String _profileFolder = "flutter_api"; 
+  final String _profileFolder = "flutter_api";
   final String _exerciseFolder = "flutter_api";
 
   @override
@@ -51,15 +53,15 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _currentUser = widget.userData ?? {};
     schedule = {for (var d in days) d: []};
-    // ตรวจสอบว่ามีข้อมูลผู้ใช้ก่อนที่จะโหลดตารางฝึก
+    
     if (user.isNotEmpty && _safeInt(user['id']) != 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) => loadSchedule());
     }
   }
 
   Map<String, dynamic> get user => _currentUser ?? widget.userData ?? {};
-  
-  // ✅ เพิ่ม Getter สำหรับสถานะ Guest/Logged-in
+
+  // ✅ Getter เช็คสถานะ Guest
   bool get isGuest => _safeInt(user['id']) == 0;
 
   String _safeString(dynamic v, [String fallback = ""]) {
@@ -84,31 +86,26 @@ class _HomeScreenState extends State<HomeScreen> {
     return "$_baseUrl/$_profileFolder/uploads/profile/$filename?v=${DateTime.now().millisecondsSinceEpoch}";
   }
 
-  // ✅ ปรับปรุง Logic การแก้ไข URL ให้ครอบคลุมและมั่นคงขึ้น
   String _getExerciseImageUrl(String? url) {
     if (url == null || url.isEmpty) return "https://via.placeholder.com/120x120?text=No+Image";
-    
+
     String finalUrl = url;
-    
-    // 1. จัดการ URL แบบเต็ม (Absolute URL)
+
     if (url.startsWith("http")) {
-        // แทนที่ localhost/127.0.0.1 ด้วย ngrok URL
-        if (finalUrl.contains("localhost") || finalUrl.contains("127.0.0.1") || finalUrl.contains("//https://dermal-hae-unsteadfastly.ngrok-free.dev")) {
-          finalUrl = finalUrl.replaceAll("localhost", "https://dermal-hae-unsteadfastly.ngrok-free.dev")
-                            .replaceAll("127.0.0.1", "https://dermal-hae-unsteadfastly.ngrok-free.dev")
-                            .replaceAll("//https://dermal-hae-unsteadfastly.ngrok-free.dev", "https://dermal-hae-unsteadfastly.ngrok-free.dev");
-        }
-        // แทนที่ชื่อ folder เก่าด้วย folder ปัจจุบัน
-        if (finalUrl.contains("fitness_exercises_api") && _exerciseFolder == "flutter_api") {
+      if (finalUrl.contains("localhost") || finalUrl.contains("127.0.0.1") || finalUrl.contains("//https://dermal-hae-unsteadfastly.ngrok-free.dev")) {
+        finalUrl = finalUrl.replaceAll("localhost", "https://dermal-hae-unsteadfastly.ngrok-free.dev")
+                           .replaceAll("127.0.0.1", "https://dermal-hae-unsteadfastly.ngrok-free.dev")
+                           .replaceAll("//https://dermal-hae-unsteadfastly.ngrok-free.dev", "https://dermal-hae-unsteadfastly.ngrok-free.dev");
+      }
+      if (finalUrl.contains("fitness_exercises_api") && _exerciseFolder == "flutter_api") {
            finalUrl = finalUrl.replaceAll("fitness_exercises_api", _exerciseFolder);
-        }
+      }
     } else {
-        // 2. จัดการ URL สัมพัทธ์ (Relative URL)
-        if (url.startsWith("uploads/")) {
-          finalUrl = "$_baseUrl/$_exerciseFolder/$url";
-        } else {
-          finalUrl = "$_baseUrl/$_exerciseFolder/uploads/$url";
-        }
+      if (url.startsWith("uploads/")) {
+        finalUrl = "$_baseUrl/$_exerciseFolder/$url";
+      } else {
+        finalUrl = "$_baseUrl/$_exerciseFolder/uploads/$url";
+      }
     }
     return finalUrl;
   }
@@ -120,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final url = Uri.parse("$_baseUrl/$_profileFolder/get_schedule.php?user_id=$userId");
-      
+
       final res = await http.get(url);
       if (res.statusCode == 200) {
         final List data = json.decode(res.body);
@@ -129,11 +126,10 @@ class _HomeScreenState extends State<HomeScreen> {
           final day = _safeString(row['day']);
           if (!schedule.containsKey(day)) continue;
           schedule[day]!.add({
-            // ✅ ดึง ID มาด้วย (สำคัญสำหรับใช้ในการเปรียบเทียบใน ScheduleScreen)
-            "id": _safeString(row["exercise_id"]), 
+            "id": _safeString(row["exercise_id"]),
             "name": _safeString(row["exercise_name"]),
             "type": _safeString(row["exercise_type"]),
-            "image_url": _safeString(row["image_url"]), 
+            "image_url": _safeString(row["image_url"]),
           });
         }
         setState(() {});
@@ -144,7 +140,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> openSchedule() async {
-    // ไม่อนุญาตให้ Guest เปิด ScheduleScreen เพื่อสร้างหรือแก้ไขตารางฝึก
     if (isGuest) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("กรุณาเข้าสู่ระบบก่อนเพื่อจัดการตารางฝึก")),
@@ -153,7 +148,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final userId = _safeInt(user['id']);
-    // **สำคัญ:** ScheduleScreen ต้องได้รับ ID ของท่าออกกำลังกายด้วย
     final refreshed = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => ScheduleScreen(userId: userId, existing: schedule)),
@@ -193,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: const Color.fromARGB(255, 234, 101, 12).withOpacity(0.15),
               borderRadius: BorderRadius.circular(16),
@@ -201,16 +195,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Icon(icon, color: const Color.fromARGB(255, 234, 101, 12)),
           ),
           const SizedBox(height: 8),
-          Text(text, style: const TextStyle(color: Colors.white)),
+          Text(text, style: const TextStyle(color: Colors.white, fontSize: 12)),
         ],
       ),
     );
   }
-  
-  // ✅ ฟังก์ชันช่วยแปลงชื่อท่าในตารางฝึกเป็นคีย์เวิร์ดกรอง
+
   String _getFilterKeyword(String exerciseName) {
     final lowerName = exerciseName.toLowerCase();
-    // ตรวจสอบจากชื่ออังกฤษหรือชื่อไทย/กลุ่มกล้ามเนื้อ
     if (lowerName.contains("pushday") || lowerName.contains("ผลัก") || lowerName.contains("อก") || lowerName.contains("ไหล่") || lowerName.contains("หน้าแขน")) {
       return "Push";
     }
@@ -220,28 +212,24 @@ class _HomeScreenState extends State<HomeScreen> {
     if (lowerName.contains("legday") || lowerName.contains("ขา") || lowerName.contains("ท้อง")) {
       return "Leg";
     }
-    return ""; // สำหรับ Cardio หรืออื่น ๆ ที่ไม่เข้าพวก
+    return "";
   }
 
-  // ✅ ปรับปรุง _scheduleCard ให้แตะได้
   Widget _scheduleCard(Map<String, dynamic> ex) {
-    final imgUrl = _getExerciseImageUrl(_safeString(ex['image_url'])); 
+    final imgUrl = _getExerciseImageUrl(_safeString(ex['image_url']));
     final exName = _safeString(ex['name']);
     final filterKeyword = _getFilterKeyword(exName);
-    
-    return GestureDetector( // ✅ เพิ่ม GestureDetector
+
+    return GestureDetector(
       onTap: () {
-        // หากมีคีย์เวิร์ดที่ใช้กรองได้ ให้ไปที่ ExercisesScreen พร้อม Filter
         if (filterKeyword.isNotEmpty) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                // ✅ ส่ง filterKeyword ไปยัง ExercisesScreen
                 builder: (_) => ExercisesScreen(initialFilter: filterKeyword),
               ),
             );
         } else {
-          // แจ้งเตือนถ้าไม่มีหมวดที่ชัดเจน
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text("ไม่มีหมวดออกกำลังกายที่ชัดเจนสำหรับ: $exName")),
           );
@@ -252,11 +240,10 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: Colors.grey[900],
           borderRadius: BorderRadius.circular(16),
-          // เพิ่ม border เล็กน้อยเพื่อบ่งบอกว่าแตะได้
           border: Border.all(
-            color: filterKeyword.isNotEmpty ? const Color.fromARGB(255, 234, 101, 12).withOpacity(0.5) : Colors.transparent, 
+            color: filterKeyword.isNotEmpty ? const Color.fromARGB(255, 234, 101, 12).withOpacity(0.5) : Colors.transparent,
             width: 1
-          ), 
+          ),
         ),
         child: Row(
           children: [
@@ -269,10 +256,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(exName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 6),
                     Text(
-                      _safeString(ex['type']), 
+                      _safeString(ex['type']),
                       style: const TextStyle(color: Colors.white70)
                     ),
-                    // ✅ แสดงปุ่มเล็กๆ หากสามารถคลิกได้
                     if (filterKeyword.isNotEmpty)
                       Container(
                         margin: const EdgeInsets.only(top: 8),
@@ -309,7 +295,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _weeklyScheduleView() {
-    // ซ่อนตารางฝึกหากเป็น Guest
     if (isGuest) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -319,7 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: const Center(
           child: Text(
-            "โปรดเข้าสู่ระบบเพื่อดูตารางฝึกของคุณ", 
+            "โปรดเข้าสู่ระบบเพื่อดูตารางฝึกของคุณ",
             style: TextStyle(color: Colors.white70, fontSize: 16)
           ),
         ),
@@ -351,8 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final displayName = _safeString(user['name'], "ผู้ใช้");
     final profileImageName = _safeString(user['profile_image']);
     final profileImageUrl = _getProfileImageUrl(profileImageName);
-    
-    // ✅ แสดงข้อความตามสถานะ Guest/Logged-in
+
     final welcomeMessage = isGuest ? "เข้าสู่ระบบเพื่อใช้งานเต็มรูปแบบ" : "พร้อมลุยกันหรือยัง?";
 
     return Scaffold(
@@ -366,30 +350,28 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // ✅ ใช้ Expanded เพื่อจำกัดความกว้างของชื่อผู้ใช้
-                  Expanded( 
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "สวัสดี, $displayName ", 
+                          "สวัสดี, $displayName ",
                           style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-                          // ✅ เพิ่ม overflow และ softWrap เพื่อให้ชื่อที่ยาวถูกตัด
                           overflow: TextOverflow.ellipsis,
                           softWrap: false,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          welcomeMessage, // ✅ ใช้ข้อความที่ปรับปรุงแล้ว
+                          welcomeMessage,
                           style: const TextStyle(color: Color.fromARGB(255, 234, 101, 12), fontSize: 16)
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 16), // เว้นระยะห่างระหว่างชื่อกับรูปโปรไฟล์
+                  const SizedBox(width: 16),
                   GestureDetector(
                     onTap: _openProfile,
-                    child: (profileImageName.isNotEmpty && !isGuest) // ซ่อนรูปโปรไฟล์ถ้าเป็น Guest (ถ้าต้องการ)
+                    child: (profileImageName.isNotEmpty && !isGuest)
                         ? CircleAvatar(
                               radius: 26,
                               backgroundColor: Colors.grey[800],
@@ -405,22 +387,51 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 30),
+              
+              // ----------------------------------------------------------------
+              // ✅ ส่วนเมนู: เพิ่มปุ่ม Q&A ที่ทำงานได้จริง
+              // ----------------------------------------------------------------
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _menu(Icons.access_time, "ตารางฝึก", openSchedule),
-                  // ✅ เปลี่ยนให้เรียก ExercisesScreen แบบไม่มี filter เมื่อกดปุ่ม "ท่าบริหาร"
+                  
                   _menu(Icons.fitness_center, "ท่าบริหาร", () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const ExercisesScreen()));
                   }),
+
                   _menu(Icons.monitor_weight, "BMI", () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const BmiScreen()));
                   }),
+
                   _menu(Icons.newspaper, "ข่าวสาร", () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const NewsScreen()));
                   }),
+
+                  // ✅ แก้ไขปุ่ม Q&A
+                  _menu(Icons.question_answer, "Q&A", () {
+                    if (isGuest) {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         const SnackBar(content: Text("กรุณาเข้าสู่ระบบก่อนเพื่อใช้งาน Q&A")),
+                       );
+                       return;
+                    }
+
+                    // ดึง ID ของ User ปัจจุบันแล้วแปลงเป็น String ส่งไปให้หน้า Q&A
+                    final currentUserId = _safeInt(user['id']).toString();
+                    
+                    Navigator.push(
+                      context, 
+                      MaterialPageRoute(
+                        builder: (_) => QnAScreen(userId: currentUserId)
+                      )
+                    );
+                  }),
                 ],
               ),
+              // ----------------------------------------------------------------
+
               const SizedBox(height: 35),
               const Text("📅 ตารางฝึกสัปดาห์นี้", style: TextStyle(color: Color.fromARGB(255, 234, 101, 12), fontSize: 22)),
               const SizedBox(height: 18),
@@ -431,4 +442,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}          
+}

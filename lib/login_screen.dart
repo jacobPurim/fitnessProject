@@ -7,6 +7,10 @@ import 'register_screen.dart';
 // ต้อง import ไฟล์ OnboardingScreen เข้ามาด้วยเพื่อให้เข้าถึงได้
 import 'main.dart'; // สมมติว่า OnboardingScreen อยู่ใน main.dart หรือคุณต้องปรับ path ให้ถูกต้อง
 
+// 🔥 เพิ่ม import สำหรับหน้า ForgotPasswordScreen
+import 'forgot_password_screen.dart'; 
+
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -155,7 +159,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               ),
             ),
-            const SizedBox(height: 30),
+            
+            // 🔥 NEW: ลิงก์ลืมรหัสผ่าน
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()), // นำทางไปหน้า ForgotPassword
+                  );
+                },
+                child: const Text(
+                  "ลืมรหัสผ่าน?", // Forgot Password?
+                  style: TextStyle(color: orangeColor, fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10), // ปรับระยะห่างให้ปุ่ม Login
 
             // ปุ่มเข้าสู่ระบบ (สีส้ม)
             ElevatedButton(

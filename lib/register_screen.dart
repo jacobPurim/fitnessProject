@@ -26,6 +26,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  // 🔥 1. เพิ่ม Controller สำหรับช่องยืนยันรหัสผ่าน
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   String? _selectedGender; // จะเก็บค่าเป็น "Male" หรือ "Female"
   File? _pickedImage;
@@ -48,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // REGISTER + UPLOAD IMAGE (พร้อมการตรวจสอบการเลือกเพศ)
   // -------------------------
   Future<void> _register() async {
-    // 1. ตรวจสอบ Validation ของ TextFormField
+    // 1. ตรวจสอบ Validation ของ TextFormField (รวมถึงเช็ค confirm password)
     if (!_formKey.currentState!.validate()) return;
 
     // 2. *** บังคับเลือกเพศ (Mandatory Gender Check) ***
@@ -80,28 +82,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
     var response = await request.send();
     var responseBody = await response.stream.bytesToString();
 
-    var data = jsonDecode(responseBody);
+    // ป้องกันกรณี Server ส่ง Error HTML กลับมาแทน JSON
+    try {
+      var data = jsonDecode(responseBody);
+      print("REGISTER RESPONSE = $data");
 
-    print("REGISTER RESPONSE = $data");
-
-    if (data["success"] == true) {
-      // ส่งค่าไปยังหน้าถัดไป
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => BmiAgeScreen(
-            userId: data["user_id"].toString(),
-            name: data["name"],
-            email: data["email"],
-            gender: data["gender"],
-            password: data["password"],
-            profile_image: data["profile_image"] ?? "",
+      if (data["success"] == true) {
+        // ส่งค่าไปยังหน้าถัดไป
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => BmiAgeScreen(
+              userId: data["user_id"].toString(),
+              name: data["name"],
+              email: data["email"],
+              gender: data["gender"],
+              password: data["password"],
+              profile_image: data["profile_image"] ?? "",
+            ),
           ),
-        ),
-      );
-    } else {
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["message"] ?? "ลงทะเบียนไม่สำเร็จ")),
+        );
+      }
+    } catch (e) {
+      print("Error parsing JSON: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data["message"] ?? "ลงทะเบียนไม่สำเร็จ")),
+         SnackBar(content: Text("เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: $responseBody")),
       );
     }
   }
@@ -124,6 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // -------------------------
                 // TITLE (ภาษาไทย)
                 // -------------------------
+                const SizedBox(height: 40),
                 const Text(
                   "สร้างบัญชีใหม่",
                   style: TextStyle(
@@ -198,6 +208,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: _inputDecoration("รหัสผ่าน"),
                   validator: (v) =>
                       v!.length < 6 ? "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" : null,
+                ),
+                const SizedBox(height: 16),
+
+                // 🔥 2. เพิ่มช่องยืนยันรหัสผ่าน (UI + Logic Check)
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  obscureText: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration("ยืนยันรหัสผ่าน"),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) {
+                      return "กรุณายืนยันรหัสผ่าน";
+                    }
+                    // 🔥 3. เช็คว่าตรงกับช่องแรกไหม
+                    if (v != _passwordController.text) {
+                      return "รหัสผ่านไม่ตรงกัน";
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -278,7 +307,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return Expanded(
       child: GestureDetector(
-        // เมื่อคลิก จะเก็บค่า dbValue ("Male" หรือ "Female") เข้า _selectedGender
         onTap: () => setState(() => _selectedGender = dbValue),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
